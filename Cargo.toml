@@ -1,0 +1,7 @@
+[package]
+name = "rustjcvm"
+version = "0.1.0"
+authors = ["Aurélien Normand <incognitas@bitbucket.org>"]
+
+[dependencies]
+byteorder = "1.0.0"
