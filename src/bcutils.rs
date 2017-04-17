@@ -3,12 +3,14 @@ extern crate byteorder;
 use std::io::Cursor;
 use std::mem;
 use bcutils::byteorder::{BigEndian, ReadBytesExt};
-use bytecodes;
+use bytecodes::bytecode;
 
-
-/*enum FetchingError {
-    EndOfStream
-}*/
+#[derive(Debug)]
+pub enum FetchingError {
+    EndOfStream,
+    IndexOutOfBound,
+    UnrecognizedBytecode
+}
 
 pub struct BytecodeFetcher<'a> {
     pub bc_array: &'a[u8],
@@ -21,43 +23,56 @@ impl<'a> BytecodeFetcher<'a> {
         BytecodeFetcher { bc_array:bc_array, offset:offset }
     }
 
+    pub fn currentOffset(&self) -> usize {
+        self.offset
+    }
+
     /// fetches a bytecode and return its associated value
-    pub fn fetchBytecode(&mut self) -> Option<bytecodes::bytecode> {
-        let curVal = self.fetchB().unwrap_or(bytecodes::bytecode::opcode_END as u8);
-        if curVal < bytecodes::bytecode::opcode_END as u8 {
-            Some(unsafe {mem::transmute(curVal)})
-        } else {
-            None
+    pub fn fetchBytecode(&mut self) -> Result<bytecode, FetchingError> {
+        match self.fetchB() {
+            Ok(result) => {
+                if result < bytecode::opcode_END as u8 {
+                    Ok(unsafe {mem::transmute(result)})
+                } else {
+                    Err(FetchingError::UnrecognizedBytecode)
+                }
+            },
+
+            Err(why) => Err(why)
         }
     }
 
     /// Fetches one byte from the internal array at given index and return it (if any)
-    pub fn fetchB(&mut self) -> Option<u8>{
+    pub fn fetchB(&mut self) -> Result<u8, FetchingError>{
         let cur_offset = self.offset;
         self.offset += 1;
         if cur_offset < self.bc_array.len() {
-            return Some(self.bc_array[cur_offset]);
+            Ok(self.bc_array[cur_offset])
+        } else {
+            Err(FetchingError::EndOfStream)
         }
-        None
     }
 
     /// Fetches one short from the internal array at given index and return it (if any)
-    pub fn fetchS(&mut self) -> Option<u16>{
+    pub fn fetchS(&mut self) -> Result<u16, FetchingError>{
         let mut buf = Cursor::new(&self.bc_array[self.offset as usize..]);
         self.offset += 2;
         if self.offset < (self.bc_array.len() - 1) {
-            return Some(buf.read_u16::<BigEndian>().unwrap());
+            Ok(buf.read_u16::<BigEndian>().unwrap())
+        } else {
+            Err(FetchingError::EndOfStream)
         }
-        None
+
     }
 
     /// Fetches one integer from the internal array at given index and return it (if any)
-    pub fn fetchI(&mut self) -> Option<u32>{
+    pub fn fetchI(&mut self) -> Result<u32, FetchingError>{
         let mut buf = Cursor::new(&self.bc_array[self.offset as usize..]);
         self.offset += 4;
         if self.offset < (self.bc_array.len() - 1) {
-            return Some(buf.read_u32::<BigEndian>().unwrap());
+            Ok(buf.read_u32::<BigEndian>().unwrap())
+        } else {
+            Err(FetchingError::EndOfStream)
         }
-        None
     }
 }
