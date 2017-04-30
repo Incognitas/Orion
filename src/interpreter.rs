@@ -1,17 +1,22 @@
 use bcutils;
 use bytecodes::bytecode;
 use context::Context;
+use stack::{StackEntryType, StackError};
+use frame::Frame;
+use std::error::Error;
 
 static null_handle: i16 = 0;
 
-pub fn interpreter(opcodes: &[u8])  {
 
-    let mut executionContext = Context::new();
+
+pub fn interpreter(opcodes: &[u8], ctx: Box<Context> ) -> Result<bool, bcutils::FetchingError> {
     let mut fetcher = bcutils::BytecodeFetcher{bc_array:opcodes, offset:0};
+
     loop {
-        let current_opcode = fetcher.fetchBytecode();
+        let current_opcode = try!(fetcher.fetchBytecode());
+
         //println!("Found bytecode : {:02X}", current_opcode.unwrap() as u8);
-        match current_opcode.unwrap() {
+        match current_opcode {
             // bytecode 0 : NOP
             bytecode::opcode_nop => {
                     println!("NOP bytecode reached at offset 0x{:X}", fetcher.currentOffset());
@@ -19,10 +24,9 @@ pub fn interpreter(opcodes: &[u8])  {
                 }
             // bytecode 1 : ACONST_NULL
             bytecode::opcode_aconst_null => {
-                vm_spush(&mut executionContext, null_handle);
+                vm_spush(&mut ctx, null_handle);
             }
-
-            // bytecode 2 : SCONST_M1
+    /*        // bytecode 2 : SCONST_M1
             bytecode::opcode_sconst_m1 => {
                 vm_spush(&mut executionContext, -1 as i16);
             }
@@ -63,19 +67,32 @@ pub fn interpreter(opcodes: &[u8])  {
             bytecode::opcode_sipush => vm_ipush(&mut executionContext, fetcher.fetchS().unwrap() as i32),
             // bytecode 20: IIPUSH
             bytecode::opcode_iipush => vm_ipush(&mut executionContext, fetcher.fetchI().unwrap() as i32),
+            // bytecode 21: ALOAD
+*/
+            bytecode::opcode_aload => {
+                let index = fetcher.fetchB().unwrap();
+                let currentFrame;
+
+                currentFrame = ctx.currentFrame().unwrap();
+
+                vm_spush(&mut ctx, currentFrame.getLocal(index).unwrap());
+
+            }
 
             _ => {break}
         }
     }
+
+    Ok(true)
 }
 
-fn vm_spush(context: &mut Context, value: i16)
+fn vm_spush(context: &mut Context, value: StackEntryType)
 {
     context.variables_stack.push(value);
 }
 
 fn vm_ipush(context: &mut Context, value: i32)
 {
-    context.variables_stack.push((value & 0xFFFF) as i16);
-    context.variables_stack.push((value >> 16) as i16);
+    vm_spush(context, (value & 0xFFFF) as StackEntryType);
+    vm_spush(context, (value >> 16) as StackEntryType);
 }

@@ -4,13 +4,17 @@ use std::io::Cursor;
 use std::mem;
 use bcutils::byteorder::{BigEndian, ReadBytesExt};
 use bytecodes::bytecode;
+use std::error::Error;
+use std::fmt::Display;
 
+// errors associated to the bytecode fetching
 #[derive(Debug)]
 pub enum FetchingError {
     EndOfStream,
     IndexOutOfBound,
     UnrecognizedBytecode
 }
+
 
 pub struct BytecodeFetcher<'a> {
     pub bc_array: &'a[u8],
