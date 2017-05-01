@@ -1,26 +1,24 @@
 use frame::Frame;
-use stack::StackError;
-use std::vec;
+use jcvmerrors::InterpreterError;
 
 pub struct FrameStack {
-    internal_stack: Vec<Frame>
+    internal_stack: Vec<Box<Frame>>,
 }
 
 impl FrameStack {
     pub fn new() -> FrameStack {
-        FrameStack {internal_stack: Vec::new()}
+        FrameStack { internal_stack: Vec::new() }
     }
 
-    pub fn newEntry(&mut self) -> &Frame {
-        self.internal_stack.push(Frame::new());
-        &self.internal_stack[self.internal_stack.len() - 1]
+    pub fn push(&mut self, new_frame: Box<Frame>) {
+        self.internal_stack.push(new_frame);
     }
 
-    pub fn top(&self) -> Result<&Frame, StackError> {
+    pub fn top(&self) -> Result<&Frame, InterpreterError> {
         if !self.internal_stack.is_empty() {
-            Ok(&self.internal_stack[self.internal_stack.len() - 1])
+            Ok(&(*self.internal_stack[self.internal_stack.len() - 1]))
         } else {
-            Err(StackError::StackUnderflowError)
+            Err(InterpreterError::StackUnderflowError)
         }
     }
 }

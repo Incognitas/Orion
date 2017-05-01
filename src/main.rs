@@ -6,13 +6,14 @@ mod stack;
 mod context;
 mod frame;
 mod framestack;
-use std::borrow::Borrow;
+mod jcvmerrors;
 
 fn main() {
-    let opcodes:&[u8] = &[1];
-    let mut executionContext = Box::new(context::Context::new());
+    let opcodes: &[u8] = &[1];
+    let mut execution_context = context::Context::new();
 
     //println!("Hello, world!");
-    interpreter::interpreter(opcodes, executionContext);
-    println!("Content : {:X}", (*executionContext).variables_stack.pop().unwrap())
+    interpreter::interpreter(opcodes, &mut execution_context);
+    println!("Content : {:X}",
+             execution_context.variables_stack.pop().unwrap())
 }
