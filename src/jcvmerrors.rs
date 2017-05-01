@@ -7,4 +7,5 @@ pub enum InterpreterError {
     EndOfStream,
     IndexOutOfBound,
     UnrecognizedBytecode,
+    NoBytecodeToFetch,
 }

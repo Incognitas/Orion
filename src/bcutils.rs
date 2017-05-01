@@ -2,21 +2,22 @@ extern crate byteorder;
 
 use std::io::Cursor;
 use std::mem;
+use std::ptr;
 use bcutils::byteorder::{BigEndian, ReadBytesExt};
 use bytecodes::bytecode;
 use jcvmerrors::InterpreterError;
 
 pub struct BytecodeFetcher<'a> {
-    pub bc_array: &'a [u8],
+    pub bc_array: Option<&'a [u8]>,
     pub offset: usize,
 }
 
 impl<'a> BytecodeFetcher<'a> {
     /// Initialization method
-    pub fn new(&self, bc_array: &'a [u8], offset: usize) -> BytecodeFetcher {
+    pub fn new() -> BytecodeFetcher<'a> {
         BytecodeFetcher {
-            bc_array: bc_array,
-            offset: offset,
+            bc_array: None,
+            offset: 0,
         }
     }
 
@@ -43,8 +44,13 @@ impl<'a> BytecodeFetcher<'a> {
     pub fn fetch_b(&mut self) -> Result<u8, InterpreterError> {
         let cur_offset = self.offset;
         self.offset += 1;
-        if cur_offset < self.bc_array.len() {
-            Ok(self.bc_array[cur_offset])
+        let local_bcref = match self.bc_array {
+            Some(bc) => bc,
+            None => return Err(InterpreterError::NoBytecodeToFetch),
+        };
+
+        if cur_offset < local_bcref.len() {
+            Ok(local_bcref[cur_offset])
         } else {
             Err(InterpreterError::EndOfStream)
         }
@@ -52,9 +58,14 @@ impl<'a> BytecodeFetcher<'a> {
 
     /// Fetches one short from the internal array at given index and return it (if any)
     pub fn fetch_s(&mut self) -> Result<u16, InterpreterError> {
-        let mut buf = Cursor::new(&self.bc_array[self.offset as usize..]);
+        let local_bcref = match self.bc_array {
+            Some(bc) => bc,
+            None => return Err(InterpreterError::NoBytecodeToFetch),
+        };
+
+        let mut buf = Cursor::new(&local_bcref[self.offset as usize..]);
         self.offset += 2;
-        if self.offset < (self.bc_array.len() - 1) {
+        if self.offset < (local_bcref.len() - 1) {
             Ok(buf.read_u16::<BigEndian>().unwrap())
         } else {
             Err(InterpreterError::EndOfStream)
@@ -64,9 +75,14 @@ impl<'a> BytecodeFetcher<'a> {
 
     /// Fetches one integer from the internal array at given index and return it (if any)
     pub fn fetch_i(&mut self) -> Result<u32, InterpreterError> {
-        let mut buf = Cursor::new(&self.bc_array[self.offset as usize..]);
+        let local_bcref = match self.bc_array {
+            Some(bc) => bc,
+            None => return Err(InterpreterError::NoBytecodeToFetch),
+        };
+
+        let mut buf = Cursor::new(&local_bcref[self.offset as usize..]);
         self.offset += 4;
-        if self.offset < (self.bc_array.len() - 1) {
+        if self.offset < (local_bcref.len() - 1) {
             Ok(buf.read_u32::<BigEndian>().unwrap())
         } else {
             Err(InterpreterError::EndOfStream)

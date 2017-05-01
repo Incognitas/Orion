@@ -11,9 +11,10 @@ mod jcvmerrors;
 fn main() {
     let opcodes: &[u8] = &[1];
     let mut execution_context = context::Context::new();
+    execution_context.bytecode_fetcher.bc_array = Some(opcodes);
 
     //println!("Hello, world!");
-    interpreter::interpreter(opcodes, &mut execution_context);
+    interpreter::interpreter(&mut execution_context);
     println!("Content : {:X}",
              execution_context.variables_stack.pop().unwrap())
 }
