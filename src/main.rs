@@ -16,5 +16,5 @@ fn main() {
     //println!("Hello, world!");
     interpreter::interpreter(&mut execution_context);
     println!("Content : {:X}",
-             execution_context.variables_stack.pop().unwrap())
+             execution_context.variables_stack.pop().unwrap().value)
 }

@@ -1,3 +1,5 @@
+use stack::StackEntryType;
+
 #[derive(Debug)]
 pub enum InterpreterError {
     // stack errors
@@ -8,4 +10,5 @@ pub enum InterpreterError {
     IndexOutOfBound,
     UnrecognizedBytecode,
     NoBytecodeToFetch,
+    InvalidVariableType(StackEntryType, StackEntryType),
 }

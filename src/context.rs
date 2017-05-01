@@ -14,7 +14,7 @@ impl<'a> Context<'a> {
     pub fn new() -> Context<'a> {
         Context {
             bytecode_fetcher: BytecodeFetcher::new(),
-            variables_stack: Stack::new(255),
+            variables_stack: Stack::new(256),
             frame_stack: FrameStack::new(),
         }
     }
