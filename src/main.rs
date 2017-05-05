@@ -1,4 +1,6 @@
 //use std::io;
+#[macro_use]
+mod exceptions;
 mod interpreter;
 mod bcutils;
 mod bytecodes;
@@ -7,9 +9,10 @@ mod context;
 mod frame;
 mod framestack;
 mod jcvmerrors;
+mod constants;
 
 fn main() {
-    let opcodes: &[u8] = &[1];
+    let opcodes: &[u8] = &[2];
     let mut execution_context = context::Context::new();
     execution_context.bytecode_fetcher.bc_array = Some(opcodes);
 

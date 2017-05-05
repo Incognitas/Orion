@@ -3,8 +3,9 @@ use bytecodes::bytecode;
 use context::Context;
 use stack::{StackEntry, StackEntryType};
 use jcvmerrors::InterpreterError;
+use constants;
+use exceptions::{throw_exception, NULL_POINTER_EXCEPTION};
 
-static NULL_HANDLE: i16 = 0;
 
 pub fn interpreter(mut execution_context: &mut Context) -> Result<(), InterpreterError> {
 
@@ -21,7 +22,7 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
             }
             // bytecode 1 : ACONST_NULL
             bytecode::opcode_aconst_null => {
-                try!(execution_context.variables_stack.apush(NULL_HANDLE));
+                try!(execution_context.variables_stack.apush(constants::NULL_HANDLE));
             }
 
             // bytecode 2 : SCONST_M1
@@ -188,6 +189,15 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
 
                 execution_context.variables_stack.push(current_local2);
                 execution_context.variables_stack.push(current_local1);
+            }
+
+            bytecode::opcode_aaload => {
+                let arrayref = try!(execution_context.variables_stack.pop());
+                let index = try!(execution_context.variables_stack.pop());
+
+                check_null_reference!(arrayref, execution_context);
+
+                // TODO: implement handle table ? heap ?
             }
 
             _ => break,

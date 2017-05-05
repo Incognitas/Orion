@@ -27,6 +27,10 @@ impl StackEntry {
             entry_type: type_,
         }
     }
+
+    pub fn is_of_type(&self, type_checked: StackEntryType) -> bool {
+        return self.entry_type == type_checked;
+    }
 }
 
 // basic implementation of a stack
