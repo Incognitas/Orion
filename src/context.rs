@@ -1,4 +1,3 @@
-use std::vec;
 use stack::Stack;
 use frame::Frame;
 use framestack::FrameStack;
