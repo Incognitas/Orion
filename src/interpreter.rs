@@ -22,7 +22,9 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
             }
             // bytecode 1 : ACONST_NULL
             bytecode::opcode_aconst_null => {
-                try!(execution_context.variables_stack.apush(constants::NULL_HANDLE));
+                try!(execution_context
+                         .variables_stack
+                         .apush(constants::NULL_HANDLE));
             }
 
             // bytecode 2 : SCONST_M1
@@ -99,7 +101,7 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
                     Ok(e) => try!(e.get_local_check_type(index, StackEntryType::reference)),
                     Err(e) => return Err(e),
                 };
-                execution_context.variables_stack.push(current_local);
+                try!(execution_context.variables_stack.push(current_local));
             }
 
             // bytecode 22: SLOAD
@@ -110,7 +112,7 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
                     Ok(e) => try!(e.get_local_check_type(index, StackEntryType::short)),
                     Err(e) => return Err(e),
                 };
-                execution_context.variables_stack.push(current_local);
+                try!(execution_context.variables_stack.push(current_local));
             }
 
             // bytecode 23: ILOAD
@@ -130,8 +132,8 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
                 };
 
                 // push variables in reverse order to keep the original order
-                execution_context.variables_stack.push(current_local2);
-                execution_context.variables_stack.push(current_local1);
+                try!(execution_context.variables_stack.push(current_local2));
+                try!(execution_context.variables_stack.push(current_local1));
             }
 
             // bytecode 24...27: ALOAD_0...ALOAD_3
@@ -148,7 +150,7 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
                     }
                     Err(e) => return Err(e),
                 };
-                execution_context.variables_stack.push(current_local);
+                try!(execution_context.variables_stack.push(current_local));
             }
 
             // bytecode 28...31: SLOAD_0...SLOAD_3
@@ -165,7 +167,7 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
                     }
                     Err(e) => return Err(e),
                 };
-                execution_context.variables_stack.push(current_local);
+                try!(execution_context.variables_stack.push(current_local));
             }
 
             // bytecode 32...35: ILOAD_0...ILOAD_3
@@ -175,20 +177,22 @@ pub fn interpreter(mut execution_context: &mut Context) -> Result<(), Interprete
             bytecode::opcode_iload_3 => {
                 // read local from current frame
                 let current_opcode_val = current_opcode as u8 - bytecode::opcode_iload_0 as u8;
-                let current_local1 = match execution_context.current_frame() {
+                let mut current_local = match execution_context.current_frame() {
                     Ok(e) => try!(e.get_local_check_type(current_opcode_val, StackEntryType::int)),
                     Err(e) => return Err(e),
                 };
 
-                let current_local2 = match execution_context.current_frame() {
+                try!(execution_context.variables_stack.push(current_local));
+                
+
+                current_local = match execution_context.current_frame() {
                     Ok(e) => {
                         try!(e.get_local_check_type(current_opcode_val + 1, StackEntryType::int))
                     }
                     Err(e) => return Err(e),
                 };
 
-                execution_context.variables_stack.push(current_local2);
-                execution_context.variables_stack.push(current_local1);
+                try!(execution_context.variables_stack.push(current_local));
             }
 
             bytecode::opcode_aaload => {

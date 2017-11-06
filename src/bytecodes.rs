@@ -1,4 +1,5 @@
 #[derive(Debug)]
+#[allow(non_camel_case_types)]
 #[derive(PartialEq)]
 #[repr(u8)]
 pub enum bytecode {

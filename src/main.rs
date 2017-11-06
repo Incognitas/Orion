@@ -1,4 +1,3 @@
-//use std::io;
 #[macro_use]
 mod exceptions;
 mod interpreter;
@@ -10,6 +9,7 @@ mod frame;
 mod framestack;
 mod jcvmerrors;
 mod constants;
+mod objects;
 
 fn main() {
     let opcodes: &[u8] = &[2];
