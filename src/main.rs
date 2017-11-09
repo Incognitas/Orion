@@ -11,6 +11,7 @@ mod framestack;
 mod jcvmerrors;
 mod constants;
 mod objects;
+mod objectsmanager;
 
 fn main() {
     let opcodes: &[u8] = &[2];
@@ -19,6 +20,8 @@ fn main() {
 
     //println!("Hello, world!");
     interpreter::interpreter(&mut execution_context);
-    println!("Content : {:X}",
-             execution_context.variables_stack.pop().unwrap().value)
+    println!(
+        "Content : {:X}",
+        execution_context.variables_stack.pop().unwrap().value
+    )
 }

@@ -3,15 +3,13 @@ use frame::Frame;
 use framestack::FrameStack;
 use jcvmerrors::InterpreterError;
 use bcutils::BytecodeFetcher;
-use objects::JCVMObject;
-
-type HandleTable = Vec<Box<JCVMObject>>;
+use objectsmanager::ObjectManager;
 
 pub struct Context<'a> {
     pub bytecode_fetcher: BytecodeFetcher<'a>,
     pub variables_stack: Stack,
     pub frame_stack: FrameStack,
-    pub handle_table: HandleTable,
+    pub object_manager: ObjectManager,
 }
 
 impl<'a> Context<'a> {
@@ -20,7 +18,7 @@ impl<'a> Context<'a> {
             bytecode_fetcher: BytecodeFetcher::new(),
             variables_stack: Stack::new(256),
             frame_stack: FrameStack::new(),
-            handle_table: Vec::new(), // <== define capacity for this handle table ? Like Vec::with_capacity(1024)
+            object_manager: ObjectManager::new(),
         }
     }
 

@@ -1,8 +1,7 @@
 use jcvmerrors::InterpreterError;
 
 // available types on the stack of variables
-#[derive(Debug,Copy,Clone)]
-#[derive(PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u8)]
 pub enum StackEntryType {
     unknown = 0x00,
@@ -41,7 +40,9 @@ pub struct Stack {
 // associated methods/functions
 impl Stack {
     pub fn new(capacity: usize) -> Stack {
-        Stack { internal_stack: Vec::with_capacity(capacity) }
+        Stack {
+            internal_stack: Vec::with_capacity(capacity),
+        }
     }
 
     // push a value on the stack
@@ -66,7 +67,10 @@ impl Stack {
     }
 
     pub fn ipush(&mut self, value: i32) -> Result<(), InterpreterError> {
-        try!(self.push(StackEntry::new((value & 0xFFFF) as i16, StackEntryType::int)));
+        try!(self.push(StackEntry::new(
+            (value & 0xFFFF) as i16,
+            StackEntryType::int
+        )));
         self.push(StackEntry::new((value >> 16) as i16, StackEntryType::int))
     }
 
@@ -89,16 +93,20 @@ impl Stack {
         }
     }
 
-    pub fn peek_index_check_type(&self,
-                                 index: u8,
-                                 type_: StackEntryType)
-                                 -> Result<StackEntry, InterpreterError> {
+    pub fn peek_index_check_type(
+        &self,
+        index: u8,
+        type_: StackEntryType,
+    ) -> Result<StackEntry, InterpreterError> {
         if self.internal_stack.len() > index as usize {
             let current_val = self.internal_stack[self.internal_stack.len() - 1 - index as usize];
             if current_val.entry_type == type_ {
                 return Ok(current_val);
             }
-            Err(InterpreterError::InvalidVariableType(current_val.entry_type, type_))
+            Err(InterpreterError::InvalidVariableType(
+                current_val.entry_type,
+                type_,
+            ))
         } else {
             Err(InterpreterError::StackUnderflowError)
         }
