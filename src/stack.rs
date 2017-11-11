@@ -81,7 +81,8 @@ impl Stack {
             .ok_or(InterpreterError::StackUnderflowError)
     }
 
-    pub fn peek(&self) -> Result<StackEntry, InterpreterError> {
+    /// returns the top element of the stack without removing it from the stack
+    pub fn top(&self) -> Result<StackEntry, InterpreterError> {
         self.peek_index(0)
     }
 

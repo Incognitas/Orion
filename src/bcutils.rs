@@ -1,9 +1,5 @@
 extern crate byteorder;
 
-use std::io::Cursor;
-use std::mem;
-use std::ptr;
-use bcutils::byteorder::{BigEndian, ReadBytesExt};
 use bytecodes::bytecode;
 use jcvmerrors::InterpreterError;
 

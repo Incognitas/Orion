@@ -3,5 +3,13 @@ name = "rustjcvm"
 version = "0.1.0"
 authors = ["Aurélien Normand <incognitas@bitbucket.org>"]
 
+[lib]
+name = "interpreterlib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rustjcvm"
+path = "src/main.rs"
+
 [dependencies]
 byteorder = "1.0.0"
