@@ -7,8 +7,7 @@ use interpreterlib::{bytecodes,interpreter,context,stack,constants};
 #[should_panic]
 fn nop_test() {
     let opcodes: Vec<u8> = vec![bytecodes::bytecode::nop as u8];
-    let mut ctx = context::Context::new();
-    ctx.bytecode_fetcher.bc_array = opcodes;
+    let mut ctx = context::Context::new(opcodes);
     // silence result as we don't care here
     let _result = interpreter::interpreter(&mut ctx);
 }
@@ -18,8 +17,7 @@ fn nop_test() {
 /// make sure the aconst_null pushes a null reference on the stack
 fn opcode_aconst_null_test() {
     let opcodes: Vec<u8> = vec![bytecodes::bytecode::aconst_null as u8];
-    let mut ctx = context::Context::new();
-    ctx.bytecode_fetcher.bc_array = opcodes;
+    let mut ctx = context::Context::new(opcodes);
     // silence result as we don't care here
     let _result = interpreter::interpreter(&mut ctx);
     let top_entry = ctx.variables_stack.top().unwrap();

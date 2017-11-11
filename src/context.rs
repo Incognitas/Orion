@@ -15,9 +15,9 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new() -> Context {
+    pub fn new(bc: Vec<u8>) -> Context {
         Context {
-            bytecode_fetcher: BytecodeFetcher::new(),
+            bytecode_fetcher: BytecodeFetcher::new(bc),
             variables_stack: Stack::new(256),
             frame_stack: FrameStack::new(),
             object_manager: ObjectManager::new(),

@@ -6,8 +6,7 @@ use interpreterlib::{interpreter, context};
 
 fn main() {
     let opcodes: Vec<u8> = vec![2];
-    let mut execution_context = context::Context::new();
-    execution_context.bytecode_fetcher.bc_array = opcodes;
+    let mut execution_context = context::Context::new(opcodes);
 
     //println!("Hello, world!");
     let _result = interpreter::interpreter(&mut execution_context);

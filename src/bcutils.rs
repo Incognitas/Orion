@@ -10,9 +10,9 @@ pub struct BytecodeFetcher {
 
 impl BytecodeFetcher {
     /// Initialization method
-    pub fn new() -> BytecodeFetcher {
+    pub fn new(bc: Vec<u8>) -> BytecodeFetcher {
         BytecodeFetcher {
-            bc_array: vec![],
+            bc_array: bc,
             offset: 0,
         }
     }
