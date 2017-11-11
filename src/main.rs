@@ -14,9 +14,9 @@ mod objects;
 mod objectsmanager;
 
 fn main() {
-    let opcodes: &[u8] = &[2];
+    let opcodes: Vec<u8> = vec![2];
     let mut execution_context = context::Context::new();
-    execution_context.bytecode_fetcher.bc_array = Some(opcodes);
+    execution_context.bytecode_fetcher.bc_array = opcodes;
 
     //println!("Hello, world!");
     interpreter::interpreter(&mut execution_context);

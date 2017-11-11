@@ -5,15 +5,17 @@ use jcvmerrors::InterpreterError;
 use bcutils::BytecodeFetcher;
 use objectsmanager::ObjectManager;
 
-pub struct Context<'a> {
-    pub bytecode_fetcher: BytecodeFetcher<'a>,
+// pub struct Context<'a> {
+//     pub bytecode_fetcher: BytecodeFetcher<'a>,
+pub struct Context {
+    pub bytecode_fetcher: BytecodeFetcher,
     pub variables_stack: Stack,
     pub frame_stack: FrameStack,
     pub object_manager: ObjectManager,
 }
 
-impl<'a> Context<'a> {
-    pub fn new() -> Context<'a> {
+impl Context {
+    pub fn new() -> Context {
         Context {
             bytecode_fetcher: BytecodeFetcher::new(),
             variables_stack: Stack::new(256),
