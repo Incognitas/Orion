@@ -1,2 +1,2 @@
 # Sample
-playground fror rust learning purpose
+playground for rust learning purpose

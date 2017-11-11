@@ -21,9 +21,9 @@ impl BytecodeFetcher {
         }
     }
 
-    pub fn get(&self, i: usize)->Result<u8, InterpreterError> {
+    pub fn get(&self, i: usize) -> Result<u8, InterpreterError> {
         let res = self.bc_array.get(i)
-                               .ok_or(InterpreterError::UnrecognizedBytecode)?;
+                               .ok_or(InterpreterError::EndOfStream)?;
         Ok(*res)
     }
 
