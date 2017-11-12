@@ -1,23 +1,23 @@
-extern crate byteorder;
-
 use bytecodes::bytecode;
 use jcvmerrors::InterpreterError;
 
+use interpreter::{BytecodeType, BytecodeData};
+
 pub struct BytecodeFetcher {
-    pub bc_array: Vec<u8>,
+    bc_array: BytecodeData,
     offset: usize,
 }
 
 impl BytecodeFetcher {
     /// Initialization method
-    pub fn new(bc: Vec<u8>) -> BytecodeFetcher {
+    pub fn new(bc: BytecodeData) -> BytecodeFetcher {
         BytecodeFetcher {
             bc_array: bc,
             offset: 0,
         }
     }
 
-    pub fn get(&self, i: usize) -> Result<u8, InterpreterError> {
+    pub fn get(&self, i: usize) -> Result<BytecodeType, InterpreterError> {
         let res = self.bc_array.get(i)
                                .ok_or(InterpreterError::EndOfStream)?;
         Ok(*res)
@@ -29,12 +29,14 @@ impl BytecodeFetcher {
 
     /// fetches a bytecode and return its associated value
     pub fn fetch_bytecode(&mut self) -> Result<bytecode, InterpreterError> {
-        bytecode::from(self.fetch_b()?)
+        bytecode::from(self.fetch_b()? as u8)
     }
 
     /// Fetches one byte from the internal array at given index and return it (if any)
-    pub fn fetch_b(&mut self) -> Result<u8, InterpreterError> {
-        Ok(self.get(self.offset)?)
+    pub fn fetch_b(&mut self) -> Result<BytecodeType, InterpreterError> {
+        let r = self.get(self.offset)?;
+        self.offset += 1;
+        Ok(r)
     }
 
     /// Fetches one short from the internal array at given index and return it (if any)

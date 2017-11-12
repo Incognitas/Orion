@@ -2,10 +2,10 @@
 extern crate interpreterlib;
 
 use interpreterlib::{interpreter, context};
-
+use interpreter::BytecodeData;
 
 fn main() {
-    let opcodes: Vec<u8> = vec![2];
+    let opcodes: BytecodeData = vec![2];
     let mut execution_context = context::Context::new(opcodes);
 
     //println!("Hello, world!");

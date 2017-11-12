@@ -1,15 +1,18 @@
-use bcutils;
 use bytecodes::bytecode;
 use context::Context;
-use stack::{StackEntry, StackEntryType};
+use stack::StackEntryType;
 use jcvmerrors::InterpreterError;
 use constants;
 use exceptions;
 
+pub type BytecodeType = i8;
+pub type BytecodeData = Vec<BytecodeType>;
+
+
 // macro allowing to simplify null reference check
 macro_rules! check_null_reference {
     ($variable:ident, $ctx:ident) => (
-        if !$variable.is_of_type(StackEntryType::reference) || $variable.value == constants::NULL_HANDLE {
+        if !$variable.is_of_type(StackEntryType::Reference) || $variable.value == constants::NULL_HANDLE {
             try!(exceptions::throw_exception($ctx, exceptions::InterpreterException::NullPointerException));
         }
     )
@@ -73,7 +76,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             // bytecode 16: BSPUSH
             bytecode::bspush => execution_context
                 .variables_stack
-                .spush(execution_context.bytecode_fetcher.fetch_b()? as i16)?,
+                .spush(i16::from(execution_context.bytecode_fetcher.fetch_b()?))?,
             // bytecode 17: SSPUSH
             bytecode::sspush => execution_context
                 .variables_stack
@@ -96,7 +99,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(index, StackEntryType::reference)?;
+                    .get_local_check_type(i16::from(index), StackEntryType::Reference)?;
 
                 execution_context.variables_stack.push(current_local)?;
             }
@@ -107,7 +110,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(index, StackEntryType::short)?;
+                    .get_local_check_type(i16::from(index), StackEntryType::Short)?;
 
                 execution_context.variables_stack.push(current_local)?;
             }
@@ -120,10 +123,10 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local1 = execution_context
                     .current_frame()?
-                    .get_local_check_type(index, StackEntryType::int)?;
+                    .get_local_check_type(i16::from(index), StackEntryType::Int)?;
                 let current_local2 = execution_context
                     .current_frame()?
-                    .get_local_check_type(index + 1, StackEntryType::int)?;
+                    .get_local_check_type(i16::from(index + 1), StackEntryType::Int)?;
 
                 // push variables in reverse order to keep the original order
                 execution_context.variables_stack.push(current_local2)?;
@@ -137,8 +140,8 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             bytecode::aload_3 => {
                 // read local from current frame
                 let current_local = execution_context.current_frame()?.get_local_check_type(
-                    current_opcode as u8 - bytecode::aload_0 as u8,
-                    StackEntryType::reference,
+                    i16::from(current_opcode as u8 - bytecode::aload_0 as u8),
+                    StackEntryType::Reference,
                 )?;
 
                 execution_context.variables_stack.push(current_local)?;
@@ -151,8 +154,8 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             bytecode::sload_3 => {
                 // read local from current frame
                 let current_local = execution_context.current_frame()?.get_local_check_type(
-                    current_opcode as u8 - bytecode::aload_0 as u8,
-                    StackEntryType::short,
+                    i16::from(current_opcode as u8 - bytecode::aload_0 as u8),
+                    StackEntryType::Short,
                 )?;
 
                 execution_context.variables_stack.push(current_local)?;
@@ -164,16 +167,16 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             bytecode::iload_2 |
             bytecode::iload_3 => {
                 // read local from current frame
-                let current_val = current_opcode as u8 - bytecode::iload_0 as u8;
+                let current_val = i16::from(current_opcode as u8 - bytecode::iload_0 as u8);
                 let mut current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(current_val, StackEntryType::int)?;
+                    .get_local_check_type(current_val, StackEntryType::Int)?;
 
                 execution_context.variables_stack.push(current_local)?;
 
                 current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(current_val + 1, StackEntryType::int)?;
+                    .get_local_check_type(current_val + 1, StackEntryType::Int)?;
 
                 execution_context.variables_stack.push(current_local)?;
             }

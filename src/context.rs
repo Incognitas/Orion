@@ -4,6 +4,7 @@ use framestack::FrameStack;
 use jcvmerrors::InterpreterError;
 use bcutils::BytecodeFetcher;
 use objectsmanager::ObjectManager;
+use interpreter::BytecodeData;
 
 // pub struct Context<'a> {
 //     pub bytecode_fetcher: BytecodeFetcher<'a>,
@@ -15,7 +16,7 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(bc: Vec<u8>) -> Context {
+    pub fn new(bc: BytecodeData) -> Context {
         Context {
             bytecode_fetcher: BytecodeFetcher::new(bc),
             variables_stack: Stack::new(256),

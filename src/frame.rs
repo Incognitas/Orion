@@ -16,7 +16,7 @@ impl Frame {
 
     pub fn get_local(
         &self,
-        index: u8,
+        index: i16,
         type_: StackEntryType,
     ) -> Result<StackEntry, InterpreterError> {
         self.locals_stack.peek_index(index)
@@ -24,7 +24,7 @@ impl Frame {
 
     pub fn get_local_check_type(
         &self,
-        index: u8,
+        index: i16,
         type_: StackEntryType,
     ) -> Result<StackEntry, InterpreterError> {
         self.locals_stack.peek_index_check_type(index, type_)

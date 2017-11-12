@@ -4,11 +4,11 @@ use jcvmerrors::InterpreterError;
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(u8)]
 pub enum StackEntryType {
-    unknown = 0x00,
-    byte = 0x01,
-    short = 0x02,
-    int = 0x04,
-    reference = 0x08,
+    Unknown = 0x00,
+    Byte = 0x01,
+    Short = 0x02,
+    Int = 0x04,
+    Reference = 0x08,
 }
 
 // one entry in the stack
@@ -55,23 +55,23 @@ impl Stack {
     }
 
     pub fn bpush(&mut self, value: i8) -> Result<(), InterpreterError> {
-        self.push(StackEntry::new(value as i16, StackEntryType::byte))
+        self.push(StackEntry::new(value as i16, StackEntryType::Byte))
     }
 
     pub fn apush(&mut self, value: i16) -> Result<(), InterpreterError> {
-        self.push(StackEntry::new(value, StackEntryType::reference))
+        self.push(StackEntry::new(value, StackEntryType::Reference))
     }
 
     pub fn spush(&mut self, value: i16) -> Result<(), InterpreterError> {
-        self.push(StackEntry::new(value, StackEntryType::short))
+        self.push(StackEntry::new(value, StackEntryType::Short))
     }
 
     pub fn ipush(&mut self, value: i32) -> Result<(), InterpreterError> {
         try!(self.push(StackEntry::new(
             (value & 0xFFFF) as i16,
-            StackEntryType::int
+            StackEntryType::Int
         )));
-        self.push(StackEntry::new((value >> 16) as i16, StackEntryType::int))
+        self.push(StackEntry::new((value >> 16) as i16, StackEntryType::Int))
     }
 
     // removes top item and returns its value
@@ -86,7 +86,7 @@ impl Stack {
         self.peek_index(0)
     }
 
-    pub fn peek_index(&self, index: u8) -> Result<StackEntry, InterpreterError> {
+    pub fn peek_index(&self, index: i16) -> Result<StackEntry, InterpreterError> {
         if self.internal_stack.len() > index as usize {
             Ok(self.internal_stack[self.internal_stack.len() - 1 - index as usize])
         } else {
@@ -96,7 +96,7 @@ impl Stack {
 
     pub fn peek_index_check_type(
         &self,
-        index: u8,
+        index: i16,
         type_: StackEntryType,
     ) -> Result<StackEntry, InterpreterError> {
         if self.internal_stack.len() > index as usize {
