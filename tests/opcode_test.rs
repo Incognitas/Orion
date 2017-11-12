@@ -55,6 +55,10 @@ fn opcode_sconst_x_test() {
     }
 }
 
+
+///
+/// Test all iconst_x opcodes from standard specification
+/// 
 #[test]
 fn opcode_iconst_x_test() {
     for x in bytecodes::bytecode::iconst_m1 as u8..bytecodes::bytecode::iconst_5 as u8 {
@@ -75,6 +79,9 @@ fn opcode_iconst_x_test() {
 }
 
 
+///
+/// Test bspush opcode from standard specification
+/// 
 #[test]
 fn opcode_bspush_test() {
     let exp_value: u16 = 0xFFA5; /*0xA5*/
@@ -95,6 +102,9 @@ fn opcode_bspush_test() {
 }
 
 
+///
+/// Test sspush opcode from standard specification
+/// 
 #[test]
 fn opcode_sspush_test() {
     let exp_value: u16 = 0xA55A; /*0xA5*/
@@ -116,7 +126,9 @@ fn opcode_sspush_test() {
 }
 
 
-
+///
+/// Test bipush opcode from standard specification
+/// 
 #[test]
 fn opcode_bipush_test() {
     let exp_value: u32 = 0xFFFFFFA5; /*0xA5 + sign extension*/
@@ -137,7 +149,9 @@ fn opcode_bipush_test() {
     );
 }
 
-
+///
+/// Test sipush opcode from standard specification
+/// 
 #[test]
 fn opcode_sipush_test() {
     let exp_value: u32 = 0xFFFFA55A; /*0xA55A + sign extension*/
@@ -160,6 +174,9 @@ fn opcode_sipush_test() {
 }
 
 
+///
+/// Test iipush opcode from standard specification
+/// 
 #[test]
 fn opcode_iipush_test() {
     let exp_value: u32 = 0xA55AA55A;
@@ -185,7 +202,8 @@ fn opcode_iipush_test() {
 }
 
 ///
-///
+/// Test aload opcode from standard specification
+/// 
 #[test]
 fn opcode_aload_test() {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
@@ -213,6 +231,9 @@ fn opcode_aload_test() {
 }
 
 
+///
+/// Test sload opcode from standard specification
+/// 
 #[test]
 fn opcode_sload_test() {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
@@ -238,7 +259,9 @@ fn opcode_sload_test() {
 }
 
 
-
+///
+/// Test iload opcode from standard specification
+/// 
 #[test]
 fn opcode_iload_test() {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
@@ -282,6 +305,9 @@ fn opcode_iload_test() {
 }
 
 
+///
+/// utility function provided for ease of testing
+/// 
 fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: StackEntryType) {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
     // we voluntarily don't  use offset 0 to make sure we pick the right value
@@ -306,6 +332,9 @@ fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: StackEntryTy
     assert!(result.value == exp_value.value && result.is_of_type(type_));
 }
 
+///
+/// Tests all aload_x opcodes (from standard specification)
+/// 
 #[test]
 fn opcode_aload_x_tests() {
     for curbc in bytecodes::bytecode::aload_0 as u8..bytecodes::bytecode::aload_3 as u8 {
@@ -318,6 +347,9 @@ fn opcode_aload_x_tests() {
 }
 
 
+///
+/// Tests all sload_x opcodes (from standard specification)
+/// 
 #[test]
 fn opcode_sload_x_tests() {
     for curbc in bytecodes::bytecode::sload_0 as u8..bytecodes::bytecode::sload_3 as u8 {
@@ -328,3 +360,4 @@ fn opcode_sload_x_tests() {
         );
     }
 }
+

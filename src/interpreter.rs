@@ -1,7 +1,6 @@
 use bytecodes::bytecode;
 use context::Context;
-use stack::StackEntryType;
-use stack::StackEntry;
+use stack::{StackEntryType, StackEntry};
 use jcvmerrors::InterpreterError;
 use constants;
 use exceptions;
@@ -241,10 +240,10 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             //bytecode::dup_x,           // 63
             //bytecode::swap_x,          // 64
             bytecode::sadd => {
-                let value1 = execution_context.variables_stack.pop()?;
-                let value2 = execution_context.variables_stack.pop()?;
+                let value1 = execution_context.operand_stack.pop()?;
+                let value2 = execution_context.operand_stack.pop()?;
                 let res = value1.value + value2.value; 
-                execution_context.variables_stack.push(StackEntry::from_values(res,StackEntryType::Short))?;
+                execution_context.operand_stack.push(StackEntry::from_values(res,StackEntryType::Short))?;
             }
             // bytecode::iadd,            // 66
             // bytecode::ssub,            // 67
