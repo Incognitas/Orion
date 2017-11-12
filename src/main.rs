@@ -12,6 +12,6 @@ fn main() {
     let _result = interpreter::interpreter(&mut execution_context);
     println!(
         "Content : {:X}",
-        execution_context.variables_stack.pop().unwrap().value
+        execution_context.operand_stack.pop().unwrap().value
     )
 }

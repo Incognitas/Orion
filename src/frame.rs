@@ -37,7 +37,7 @@ impl Frame {
         self.locals_stack.peek_index_check_type(index, type_)
     }
 
-    pub fn set_local(&mut self, index: i16, entry: &StackEntry) -> Result<(), InterpreterError> {
-        self.locals_stack.update_index(index, &entry)
+    pub fn set_local(&mut self, index: i16, entry: StackEntry) -> Result<(), InterpreterError> {
+        self.locals_stack.update_index(index, entry)
     }
 }

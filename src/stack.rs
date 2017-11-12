@@ -121,9 +121,9 @@ impl Stack {
         }
     }
 
-    pub fn update_index(&mut self, index: i16, newval: &StackEntry) -> Result<(), InterpreterError> {
-        if (index as usize) < self.internal_stack.capacity() {
-            let maxlen = self.internal_stack.capacity();
+    pub fn update_index(&mut self, index: i16, newval: StackEntry) -> Result<(), InterpreterError> {
+        if (index as usize) < self.internal_stack.len() {
+            let maxlen = self.internal_stack.len();
             if let Some(value_to_update) = self.internal_stack.get_mut(maxlen - (index as usize) - 1) {
                 (*value_to_update).value = newval.value;
                 (*value_to_update).entry_type = newval.entry_type;
