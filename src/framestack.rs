@@ -17,10 +17,16 @@ impl FrameStack {
     }
 
     pub fn top(&self) -> Result<&Frame, InterpreterError> {
-        if !self.internal_stack.is_empty() {
-            Ok(&(self.internal_stack[self.internal_stack.len() - 1]))
-        } else {
-            Err(InterpreterError::StackUnderflowError)
+        match self.internal_stack.last() {
+            Some(result) => Ok(result),
+            None => Err(InterpreterError::StackUnderflowError)
+        }
+    }
+
+    pub fn top_mut(&mut self) -> Result<&mut Frame, InterpreterError> {
+        match self.internal_stack.last_mut() {
+            Some(result) => Ok(result),
+            None => Err(InterpreterError::StackUnderflowError)
         }
     }
 }

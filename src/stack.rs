@@ -11,16 +11,24 @@ pub enum StackEntryType {
     Reference = 0x08,
 }
 
+pub type StackElementType = i16;
+
 // one entry in the stack
 #[derive(Copy, Clone)]
 pub struct StackEntry {
-    pub value: i16,
+    pub value: StackElementType,
     entry_type: StackEntryType,
 }
 
 // implementation associated to the StackEntry
 impl StackEntry {
-    pub fn new(val: i16, type_: StackEntryType) -> StackEntry {
+    pub fn new() -> StackEntry {
+        StackEntry {
+            value: 0,
+            entry_type: StackEntryType::Unknown
+        }
+    }
+    pub fn from_values(val: StackElementType, type_: StackEntryType) -> StackEntry {
         StackEntry {
             value: val,
             entry_type: type_,
@@ -55,23 +63,23 @@ impl Stack {
     }
 
     pub fn bpush(&mut self, value: i8) -> Result<(), InterpreterError> {
-        self.push(StackEntry::new(value as i16, StackEntryType::Byte))
+        self.push(StackEntry::from_values(value as i16, StackEntryType::Byte))
     }
 
     pub fn apush(&mut self, value: i16) -> Result<(), InterpreterError> {
-        self.push(StackEntry::new(value, StackEntryType::Reference))
+        self.push(StackEntry::from_values(value, StackEntryType::Reference))
     }
 
     pub fn spush(&mut self, value: i16) -> Result<(), InterpreterError> {
-        self.push(StackEntry::new(value, StackEntryType::Short))
+        self.push(StackEntry::from_values(value, StackEntryType::Short))
     }
 
     pub fn ipush(&mut self, value: i32) -> Result<(), InterpreterError> {
-        try!(self.push(StackEntry::new(
+        try!(self.push(StackEntry::from_values(
             (value & 0xFFFF) as i16,
             StackEntryType::Int
         )));
-        self.push(StackEntry::new((value >> 16) as i16, StackEntryType::Int))
+        self.push(StackEntry::from_values((value >> 16) as i16, StackEntryType::Int))
     }
 
     // removes top item and returns its value
@@ -111,5 +119,17 @@ impl Stack {
         } else {
             Err(InterpreterError::StackUnderflowError)
         }
+    }
+
+    pub fn update_index(&mut self, index: i16, newval: &StackEntry) -> Result<(), InterpreterError> {
+        if (index as usize) < self.internal_stack.capacity() {
+            let maxlen = self.internal_stack.capacity();
+            if let Some(value_to_update) = self.internal_stack.get_mut(maxlen - (index as usize) - 1) {
+                (*value_to_update).value = newval.value;
+                (*value_to_update).entry_type = newval.entry_type;
+                return Ok(());
+            }
+        }
+        Err(InterpreterError::IndexOutOfBound)
     }
 }

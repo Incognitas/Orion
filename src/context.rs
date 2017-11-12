@@ -25,7 +25,11 @@ impl Context {
         }
     }
 
-    pub fn current_frame(&self) -> Result<&Frame, InterpreterError> {
+    pub fn current_frame(&mut self) -> Result<&Frame, InterpreterError> {
         self.frame_stack.top()
+    }
+
+    pub fn current_frame_mut(&mut self) -> Result<&mut Frame, InterpreterError> {
+        self.frame_stack.top_mut()
     }
 }
