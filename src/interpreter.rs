@@ -1,9 +1,10 @@
 use bytecodes::bytecode;
 use context::Context;
-use stack::{StackEntryType, StackEntry};
+use stack::StackEntry;
 use jcvmerrors::InterpreterError;
 use constants;
 use exceptions;
+use traits::HasType;
 
 pub type BytecodeType = i8;
 pub type BytecodeData = Vec<BytecodeType>;
@@ -12,7 +13,7 @@ pub type BytecodeData = Vec<BytecodeType>;
 // macro allowing to simplify null reference check
 macro_rules! check_null_reference {
     ($variable:ident, $ctx:ident) => (
-        if !$variable.is_of_type(StackEntryType::Reference) || $variable.value == constants::NULL_HANDLE {
+        if !$variable.is_of_type(constants::PrimitiveType::REFERENCE) || $variable.value == constants::NULL_HANDLE {
             try!(exceptions::throw_exception($ctx, exceptions::InterpreterException::NullPointerException));
         }
     )
@@ -99,7 +100,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(i16::from(index), StackEntryType::Reference)?;
+                    .get_local_check_type(i16::from(index), constants::PrimitiveType::REFERENCE)?;
 
                 execution_context.operand_stack.push(current_local)?;
             }
@@ -110,7 +111,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(i16::from(index), StackEntryType::Short)?;
+                    .get_local_check_type(i16::from(index), constants::PrimitiveType::SHORT)?;
 
                 execution_context.operand_stack.push(current_local)?;
             }
@@ -123,10 +124,10 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local1 = execution_context
                     .current_frame()?
-                    .get_local_check_type(i16::from(index), StackEntryType::Int)?;
+                    .get_local_check_type(i16::from(index), constants::PrimitiveType::INTEGER)?;
                 let current_local2 = execution_context
                     .current_frame()?
-                    .get_local_check_type(i16::from(index + 1), StackEntryType::Int)?;
+                    .get_local_check_type(i16::from(index + 1), constants::PrimitiveType::INTEGER)?;
 
                 // push variables in reverse order to keep the original order
                 execution_context.operand_stack.push(current_local2)?;
@@ -141,7 +142,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local = execution_context.current_frame()?.get_local_check_type(
                     i16::from(current_opcode as u8 - bytecode::aload_0 as u8),
-                    StackEntryType::Reference,
+                    constants::PrimitiveType::REFERENCE,
                 )?;
 
                 execution_context.operand_stack.push(current_local)?;
@@ -155,7 +156,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 // read local from current frame
                 let current_local = execution_context.current_frame()?.get_local_check_type(
                     i16::from(current_opcode as u8 - bytecode::sload_0 as u8),
-                    StackEntryType::Short,
+                    constants::PrimitiveType::SHORT,
                 )?;
 
                 execution_context.operand_stack.push(current_local)?;
@@ -170,13 +171,13 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 let current_val = i16::from(current_opcode as u8 - bytecode::iload_0 as u8);
                 let mut current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(current_val + 1, StackEntryType::Int)?;
+                    .get_local_check_type(current_val + 1, constants::PrimitiveType::INTEGER)?;
 
                 execution_context.operand_stack.push(current_local)?;
 
                 current_local = execution_context
                     .current_frame()?
-                    .get_local_check_type(current_val, StackEntryType::Int)?;
+                    .get_local_check_type(current_val, constants::PrimitiveType::INTEGER)?;
 
                 execution_context.operand_stack.push(current_local)?;
             }
@@ -187,16 +188,18 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
 
                 check_null_reference!(arrayref, execution_context);
 
-                let associatedReference = execution_context
+                let associated_reference = execution_context
                     .object_manager
                     .get_object(index.value as usize);
 
-                if let Ok(e) = associatedReference {
+                if let Ok(e) = associated_reference {
                     // consistency check to make sure it is an array
                     assert_eq!(
                         e.flags() & (constants::ObjectFlags::ARRAY as u8),
                         constants::ObjectFlags::ARRAY as u8
                     );
+
+                    assert!(e.is_of_type(constants::PrimitiveType::REFERENCE));
 
                     // retrieve value of the reference of the array
                     // TODO
@@ -204,7 +207,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 } else {
                     exceptions::throw_exception(
                         execution_context,
-                        associatedReference.err().unwrap(),
+                        associated_reference.err().unwrap(),
                     )?;
                 }
 
@@ -243,7 +246,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                 let value1 = execution_context.operand_stack.pop()?;
                 let value2 = execution_context.operand_stack.pop()?;
                 let res = value1.value + value2.value; 
-                execution_context.operand_stack.push(StackEntry::from_values(res,StackEntryType::Short))?;
+                execution_context.operand_stack.push(StackEntry::from_values(res,constants::PrimitiveType::SHORT))?;
             }
             // bytecode::iadd,            // 66
             // bytecode::ssub,            // 67

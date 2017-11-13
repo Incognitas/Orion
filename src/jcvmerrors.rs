@@ -1,4 +1,4 @@
-use stack::StackEntryType;
+use constants;
 
 #[derive(Debug)]
 pub enum InterpreterError {
@@ -10,5 +10,5 @@ pub enum InterpreterError {
     IndexOutOfBound,
     UnrecognizedBytecode,
     NoBytecodeToFetch,
-    InvalidVariableType(StackEntryType, StackEntryType),
+    InvalidVariableType(constants::PrimitiveType, constants::PrimitiveType),
 }

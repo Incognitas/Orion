@@ -10,6 +10,3 @@ path = "src/lib.rs"
 [[bin]]
 name = "rustjcvm"
 path = "src/main.rs"
-
-[dependencies]
-byteorder = "1.0.0"

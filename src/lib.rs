@@ -5,7 +5,7 @@ pub mod context;
 pub mod exceptions;
 pub mod bcutils;
 pub mod stack;
-
+pub mod traits;
 pub mod frame;
 pub mod framestack;
 pub mod jcvmerrors;

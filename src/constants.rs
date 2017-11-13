@@ -10,7 +10,7 @@ pub enum ObjectFlags {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u8)]
 pub enum PrimitiveType {
     UNKNOWN = 0x0,

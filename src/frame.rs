@@ -1,5 +1,6 @@
-use stack::{Stack, StackEntry, StackEntryType};
+use stack::{Stack, StackEntry};
 use jcvmerrors::InterpreterError;
+use constants;
 
 // structure representing one frame
 pub struct Frame {
@@ -32,7 +33,7 @@ impl Frame {
     pub fn get_local_check_type(
         &self,
         index: i16,
-        type_: StackEntryType,
+        type_: constants::PrimitiveType,
     ) -> Result<StackEntry, InterpreterError> {
         self.locals_stack.peek_index_check_type(index, type_)
     }

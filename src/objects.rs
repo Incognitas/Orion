@@ -1,5 +1,7 @@
 use constants;
 use jcvmerrors::InterpreterError;
+use traits::HasType;
+
 
 // a structure representing an object
 pub struct JCVMObject {
@@ -9,6 +11,15 @@ pub struct JCVMObject {
     object_length: i16, // length in terms of raw length (not in terms of items etc)
     persistent: bool,
     pub content: Vec<i8>, // sometimes we don't have arrays
+}
+
+impl HasType for JCVMObject {
+    ///
+    /// Indicates true if the current instance is of type 'cmp_val'
+    /// 
+    fn is_of_type(&self, cmp_val: constants::PrimitiveType) -> bool {
+        self.primitive_type == cmp_val 
+    }
 }
 
 
@@ -30,6 +41,23 @@ impl JCVMObject {
         }
     }
 
+    pub fn new_array(
+        owner: i16,
+        flags_: u8,
+        ptype: constants::PrimitiveType,
+        length: i16,
+        persistent: bool,
+    ) -> JCVMObject {
+         JCVMObject {
+            owner: owner,
+            object_flags: flags_,
+            primitive_type: ptype,
+            object_length: length,
+            persistent: persistent,
+            content: Vec::new(),
+        }
+    }
+
     pub fn owner(&self) -> i16 {
         self.owner
     }
@@ -40,10 +68,6 @@ impl JCVMObject {
 
     pub fn length(&self) -> i16 {
         self.object_length
-    }
-
-    pub fn primitive_type(&self) -> &constants::PrimitiveType {
-        &self.primitive_type
     }
 
     pub fn at_index_b(&self, index: usize) -> Result<i8, InterpreterError> {

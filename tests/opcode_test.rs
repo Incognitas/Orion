@@ -3,7 +3,7 @@ extern crate interpreterlib;
 use interpreterlib::{bytecodes, constants, context, frame, interpreter, stack};
 
 use interpreter::{BytecodeData, BytecodeType};
-use stack::{StackElementType, StackEntry, StackEntryType};
+use stack::{StackElementType, StackEntry};
 
 pub fn execute_with_context(mut ctx: &mut context::Context) {
     let _result = interpreter::interpreter(&mut ctx);
@@ -36,7 +36,7 @@ fn opcode_aconst_null_test() {
     let top_entry = ctx.operand_stack.top().unwrap();
     assert!(
         top_entry.value == constants::NULL_HANDLE
-            && top_entry.is_of_type(stack::StackEntryType::Reference)
+            && top_entry.is_of_type(constants::PrimitiveType::REFERENCE)
     );
 }
 
@@ -50,7 +50,7 @@ fn opcode_sconst_x_test() {
         let top_entry = ctx.operand_stack.top().unwrap();
         assert!(
             (top_entry.value == expected_value)
-                && (top_entry.is_of_type(stack::StackEntryType::Short))
+                && (top_entry.is_of_type(constants::PrimitiveType::SHORT))
         );
     }
 }
@@ -58,7 +58,7 @@ fn opcode_sconst_x_test() {
 
 ///
 /// Test all iconst_x opcodes from standard specification
-/// 
+///
 #[test]
 fn opcode_iconst_x_test() {
     for x in bytecodes::bytecode::iconst_m1 as u8..bytecodes::bytecode::iconst_5 as u8 {
@@ -71,9 +71,9 @@ fn opcode_iconst_x_test() {
         // next two bytes are in the next index of the stack
         assert!(
             (top_entry2.value == expected_value2)
-                && (top_entry2.is_of_type(stack::StackEntryType::Int))
+                && (top_entry2.is_of_type(constants::PrimitiveType::INTEGER))
                 && (top_entry1.value == expected_value1)
-                && (top_entry1.is_of_type(stack::StackEntryType::Int))
+                && (top_entry1.is_of_type(constants::PrimitiveType::INTEGER))
         );
     }
 }
@@ -81,7 +81,7 @@ fn opcode_iconst_x_test() {
 
 ///
 /// Test bspush opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_bspush_test() {
     let exp_value: u16 = 0xFFA5; /*0xA5*/
@@ -97,14 +97,14 @@ fn opcode_bspush_test() {
         exp_value
     );
     assert!(
-        top_entry.value as u16 == exp_value && top_entry.is_of_type(stack::StackEntryType::Short)
+        top_entry.value as u16 == exp_value && top_entry.is_of_type(constants::PrimitiveType::SHORT)
     );
 }
 
 
 ///
 /// Test sspush opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_sspush_test() {
     let exp_value: u16 = 0xA55A; /*0xA5*/
@@ -121,14 +121,14 @@ fn opcode_sspush_test() {
         exp_value
     );
     assert!(
-        top_entry.value as u16 == exp_value && top_entry.is_of_type(stack::StackEntryType::Short)
+        top_entry.value as u16 == exp_value && top_entry.is_of_type(constants::PrimitiveType::SHORT)
     );
 }
 
 
 ///
 /// Test bipush opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_bipush_test() {
     let exp_value: u32 = 0xFFFFFFA5; /*0xA5 + sign extension*/
@@ -144,14 +144,14 @@ fn opcode_bipush_test() {
 
     println!("Found value : {:08X} instead of {:08X}", result, exp_value);
     assert!(
-        result == exp_value && entry1.is_of_type(stack::StackEntryType::Int)
-            && entry2.is_of_type(stack::StackEntryType::Int)
+        result == exp_value && entry1.is_of_type(constants::PrimitiveType::INTEGER)
+            && entry2.is_of_type(constants::PrimitiveType::INTEGER)
     );
 }
 
 ///
 /// Test sipush opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_sipush_test() {
     let exp_value: u32 = 0xFFFFA55A; /*0xA55A + sign extension*/
@@ -168,15 +168,15 @@ fn opcode_sipush_test() {
 
     println!("Found value : {:08X} instead of {:08X}", result, exp_value);
     assert!(
-        result == exp_value && entry1.is_of_type(stack::StackEntryType::Int)
-            && entry2.is_of_type(stack::StackEntryType::Int)
+        result == exp_value && entry1.is_of_type(constants::PrimitiveType::INTEGER)
+            && entry2.is_of_type(constants::PrimitiveType::INTEGER)
     );
 }
 
 
 ///
 /// Test iipush opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_iipush_test() {
     let exp_value: u32 = 0xA55AA55A;
@@ -196,14 +196,14 @@ fn opcode_iipush_test() {
 
     println!("Found value : {:08X} instead of {:08X}", result, exp_value);
     assert!(
-        result == exp_value && entry1.is_of_type(stack::StackEntryType::Int)
-            && entry2.is_of_type(stack::StackEntryType::Int)
+        result == exp_value && entry1.is_of_type(constants::PrimitiveType::INTEGER)
+            && entry2.is_of_type(constants::PrimitiveType::INTEGER)
     );
 }
 
 ///
 /// Test aload opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_aload_test() {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
@@ -213,7 +213,7 @@ fn opcode_aload_test() {
     let mut ctx = context::Context::new(datatoexecute);
     let exp_value = StackEntry::from_values(
         (0xA55A as u16) as StackElementType,
-        StackEntryType::Reference,
+        constants::PrimitiveType::REFERENCE,
     );
 
     ctx.frame_stack.push(frame::Frame::new(2));
@@ -227,13 +227,13 @@ fn opcode_aload_test() {
     // check that we have the right local in the stack (first, check it is a reference)
     let result = ctx.operand_stack.top().unwrap();
 
-    assert!(result.value == exp_value.value && result.is_of_type(stack::StackEntryType::Reference));
+    assert!(result.value == exp_value.value && result.is_of_type(constants::PrimitiveType::REFERENCE));
 }
 
 
 ///
 /// Test sload opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_sload_test() {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
@@ -242,7 +242,7 @@ fn opcode_sload_test() {
     let datatoexecute: BytecodeData = vec![bytecodes::bytecode::sload as BytecodeType, idx];
     let mut ctx = context::Context::new(datatoexecute);
     let exp_value =
-        StackEntry::from_values((0xA55A as u16) as StackElementType, StackEntryType::Short);
+        StackEntry::from_values((0xA55A as u16) as StackElementType, constants::PrimitiveType::SHORT);
 
     ctx.frame_stack.push(frame::Frame::new(2));
     {
@@ -255,13 +255,13 @@ fn opcode_sload_test() {
     // check that we have the right local in the stack (first, check it is a reference)
     let result = ctx.operand_stack.top().unwrap();
 
-    assert!(result.value == exp_value.value && result.is_of_type(stack::StackEntryType::Short));
+    assert!(result.value == exp_value.value && result.is_of_type(constants::PrimitiveType::SHORT));
 }
 
 
 ///
 /// Test iload opcode from standard specification
-/// 
+///
 #[test]
 fn opcode_iload_test() {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
@@ -277,7 +277,7 @@ fn opcode_iload_test() {
         top_frame
             .set_local(
                 idx as i16,
-                StackEntry::from_values((exp_value >> 16) as StackElementType, StackEntryType::Int),
+                StackEntry::from_values((exp_value >> 16) as StackElementType, constants::PrimitiveType::INTEGER),
             )
             .unwrap();
         top_frame
@@ -285,7 +285,7 @@ fn opcode_iload_test() {
                 (idx + 1) as i16,
                 StackEntry::from_values(
                     (exp_value & 0xFFFF) as StackElementType,
-                    StackEntryType::Int,
+                    constants::PrimitiveType::INTEGER,
                 ),
             )
             .unwrap();
@@ -296,27 +296,24 @@ fn opcode_iload_test() {
     // check that we have the right local in the stack (first, check it is a reference)
     let result1 = ctx.operand_stack.peek_index(0).unwrap();
     let result2 = ctx.operand_stack.peek_index(1).unwrap();
-    
+
     assert!(
         result1.value == (exp_value >> 16) as i16 && result2.value == (exp_value & 0xFFFF) as i16
-            && result1.is_of_type(stack::StackEntryType::Int)
-            && result2.is_of_type(stack::StackEntryType::Int)
+            && result1.is_of_type(constants::PrimitiveType::INTEGER)
+            && result2.is_of_type(constants::PrimitiveType::INTEGER)
     );
 }
 
 
 ///
 /// utility function provided for ease of testing
-/// 
-fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: StackEntryType) {
+///
+fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: constants::PrimitiveType) {
     // prepare data for aload (a local variable of type reference in local variables at index 1)
     // we voluntarily don't  use offset 0 to make sure we pick the right value
     let datatoexecute: BytecodeData = vec![bc as BytecodeType];
     let mut ctx = context::Context::new(datatoexecute);
-    let exp_value = StackEntry::from_values(
-        (0xA55A as u16) as StackElementType,
-        type_,
-    );
+    let exp_value = StackEntry::from_values((0xA55A as u16) as StackElementType, type_);
 
     ctx.frame_stack.push(frame::Frame::new(idx + 1));
     {
@@ -334,14 +331,14 @@ fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: StackEntryTy
 
 ///
 /// Tests all aload_x opcodes (from standard specification)
-/// 
+///
 #[test]
 fn opcode_aload_x_tests() {
     for curbc in bytecodes::bytecode::aload_0 as u8..bytecodes::bytecode::aload_3 as u8 {
         opcode_xload_x_unittest(
             bytecodes::bytecode::from(curbc).unwrap(),
             (curbc - (bytecodes::bytecode::aload_0 as u8)),
-            stack::StackEntryType::Reference,
+            constants::PrimitiveType::REFERENCE,
         );
     }
 }
@@ -349,15 +346,14 @@ fn opcode_aload_x_tests() {
 
 ///
 /// Tests all sload_x opcodes (from standard specification)
-/// 
+///
 #[test]
 fn opcode_sload_x_tests() {
     for curbc in bytecodes::bytecode::sload_0 as u8..bytecodes::bytecode::sload_3 as u8 {
         opcode_xload_x_unittest(
             bytecodes::bytecode::from(curbc).unwrap(),
             (curbc - (bytecodes::bytecode::sload_0 as u8)),
-            stack::StackEntryType::Short,
+            constants::PrimitiveType::SHORT,
         );
     }
 }
-
