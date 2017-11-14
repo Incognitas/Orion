@@ -4,7 +4,7 @@ use stack::StackEntry;
 use jcvmerrors::InterpreterError;
 use constants;
 use exceptions;
-use traits::HasType;
+use traits::{HasType, DataReader};
 
 pub type BytecodeType = i8;
 pub type BytecodeData = Vec<BytecodeType>;
@@ -81,7 +81,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             // bytecode 17: SSPUSH
             bytecode::sspush => execution_context
                 .operand_stack
-                .spush(execution_context.bytecode_fetcher.fetch_s()? as i16)?,
+                .spush(execution_context.bytecode_fetcher.fetch_s()?)?,
             // bytecode 18: BIPUSH
             bytecode::bipush => execution_context
                 .operand_stack
@@ -202,17 +202,22 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     assert!(e.is_of_type(constants::PrimitiveType::REFERENCE));
 
                     // retrieve value of the reference of the array
-                    // TODO
-                    panic!("implementation not finished !")
+                    if let Ok(reference) = e.read_s((index.value * 2) as usize) {
+                        execution_context.operand_stack.apush(reference)?;
+                    }
+                    else {
+                        exceptions::throw_exception(
+                            execution_context,
+                            associated_reference.err().unwrap())?;
+                    }
+
+                    
                 } else {
                     exceptions::throw_exception(
                         execution_context,
                         associated_reference.err().unwrap(),
                     )?;
                 }
-
-
-                // TODO: implement handle table ? heap ?
             }
             //bytecode::baload,          // 37
             //bytecode::saload,          // 38

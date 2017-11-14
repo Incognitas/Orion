@@ -39,18 +39,18 @@ impl BytecodeFetcher {
     }
 
     /// Fetches one short from the internal array at given index and return it (if any)
-    pub fn fetch_s(&mut self) -> Result<u16, InterpreterError> {
+    pub fn fetch_s(&mut self) -> Result<i16, InterpreterError> {
         let r = (self.get(self.offset)? as u16) << 8 | self.get(self.offset + 1)? as u16;
         self.offset += 2;
-        Ok(r)
+        Ok(r as i16)
     }
 
     /// Fetches one integer from the internal array at given index and return it (if any)
-    pub fn fetch_i(&mut self) -> Result<u32, InterpreterError> {
+    pub fn fetch_i(&mut self) -> Result<i32, InterpreterError> {
         let r1 = (self.get(self.offset)? as u16) << 8 | self.get(self.offset + 1)? as u16;
         let r2 = (self.get(self.offset + 2)? as u16) << 8 | self.get(self.offset + 3)? as u16;
         let r = (u32::from(r1) << 16) | u32::from(r2);
         self.offset += 4;
-        Ok(r)
+        Ok(r as i32)
     }
 }

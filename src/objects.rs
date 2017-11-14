@@ -1,7 +1,9 @@
 use constants;
 use jcvmerrors::InterpreterError;
-use traits::HasType;
+use traits::{HasType, DataReader};
+use interpreter::BytecodeType;
 
+type InternalBuffer = Vec<i8>;
 
 // a structure representing an object
 pub struct JCVMObject {
@@ -10,7 +12,7 @@ pub struct JCVMObject {
     primitive_type: constants::PrimitiveType,
     object_length: i16, // length in terms of raw length (not in terms of items etc)
     persistent: bool,
-    pub content: Vec<i8>, // sometimes we don't have arrays
+    content: InternalBuffer, // sometimes we don't have arrays
 }
 
 impl HasType for JCVMObject {
@@ -19,6 +21,24 @@ impl HasType for JCVMObject {
     /// 
     fn is_of_type(&self, cmp_val: constants::PrimitiveType) -> bool {
         self.primitive_type == cmp_val 
+    }
+}
+
+impl DataReader for JCVMObject {
+    fn read_b(&self, offset: usize) -> Result<i8, InterpreterError> {
+        self.get(offset)
+    }
+
+    fn read_s(&self, offset: usize) -> Result<i16, InterpreterError> {
+        let r = (self.get(offset)? as i16) << 8 | self.get(offset + 1)? as i16;
+        Ok(r)
+    }
+
+    fn read_i(&self, offset: usize) -> Result<i32, InterpreterError> {
+        let r1 = (self.get(offset)? as u16) << 8 | self.get(offset + 1)? as u16;
+        let r2 = (self.get(offset + 2)? as u16) << 8 | self.get(offset + 3)? as u16;
+        let r = (u32::from(r1) << 16) | u32::from(r2);
+        Ok(r as i32)
     }
 }
 
@@ -76,11 +96,9 @@ impl JCVMObject {
         }
         Err(InterpreterError::IndexOutOfBound)
     }
-    /*
-    pub fn at_index_s(&self, index: usize) -> Result<i16, InterpreterError> {
-        if index < self.content.len() {
-            return Ok(self.content[index]);
-        }
-        Err(InterpreterError::IndexOutOfBound)
-    }*/
+    
+    fn get(&self, offset: usize) -> Result<BytecodeType, InterpreterError> {
+        let res = self.content.get(offset).ok_or(InterpreterError::IndexOutOfBound)?;
+        Ok(*res)
+    }
 }
