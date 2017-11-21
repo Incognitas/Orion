@@ -194,10 +194,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
 
                 if let Ok(e) = associated_reference {
                     // consistency check to make sure it is an array
-                    assert_eq!(
-                        e.flags() & (constants::ObjectFlags::ARRAY as u8),
-                        constants::ObjectFlags::ARRAY as u8
-                    );
+                    assert!(e.is_array());
 
                     assert!(e.is_of_type(constants::PrimitiveType::REFERENCE));
 
@@ -250,7 +247,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             bytecode::sadd => {
                 let value1 = execution_context.operand_stack.pop()?;
                 let value2 = execution_context.operand_stack.pop()?;
-                let res = value1.value + value2.value; 
+                let res = value1.value + value2.value;
                 execution_context.operand_stack.push(StackEntry::from_values(res,constants::PrimitiveType::SHORT))?;
             }
             // bytecode::iadd,            // 66

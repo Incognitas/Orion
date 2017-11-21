@@ -68,7 +68,7 @@ impl JCVMObject {
         length: i16,
         persistent: bool,
     ) -> JCVMObject {
-         JCVMObject {
+        JCVMObject {
             owner: owner,
             object_flags: flags_,
             primitive_type: ptype,
@@ -96,9 +96,13 @@ impl JCVMObject {
         }
         Err(InterpreterError::IndexOutOfBound)
     }
-    
-    fn get(&self, offset: usize) -> Result<BytecodeType, InterpreterError> {
+
+    pub fn get(&self, offset: usize) -> Result<BytecodeType, InterpreterError> {
         let res = self.content.get(offset).ok_or(InterpreterError::IndexOutOfBound)?;
         Ok(*res)
+    }
+            
+    pub fn is_array(&self) -> bool {
+        ((self.flags() as u8) & (constants::ObjectFlags::ARRAY as u8)) != 0
     }
 }
