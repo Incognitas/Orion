@@ -46,9 +46,7 @@ pub struct Stack {
 // associated methods/functions
 impl Stack {
     pub fn new(capacity: usize) -> Stack {
-        Stack {
-            internal_stack: Vec::with_capacity(capacity),
-        }
+        Stack { internal_stack: Vec::with_capacity(capacity) }
     }
 
     // push a value on the stack
@@ -73,14 +71,9 @@ impl Stack {
     }
 
     pub fn ipush(&mut self, value: i32) -> Result<(), InterpreterError> {
-        try!(self.push(StackEntry::from_values(
-            (value & 0xFFFF) as i16,
-            constants::PrimitiveType::INTEGER
-        )));
-        self.push(StackEntry::from_values(
-            (value >> 16) as i16,
-            constants::PrimitiveType::INTEGER,
-        ))
+        try!(self.push(StackEntry::from_values((value & 0xFFFF) as i16,
+                                               constants::PrimitiveType::INTEGER)));
+        self.push(StackEntry::from_values((value >> 16) as i16, constants::PrimitiveType::INTEGER))
     }
 
     // removes top item and returns its value
@@ -88,6 +81,14 @@ impl Stack {
         self.internal_stack
             .pop()
             .ok_or(InterpreterError::StackUnderflowError)
+    }
+
+    pub fn pop_check_type(&mut self, type_: constants::PrimitiveType) -> Result<StackEntry, InterpreterError> {
+        let result = self.pop()?;
+        if !result.is_of_type(type_) {
+            return Err(InterpreterError::InvalidVariableType(result.entry_type, type_));
+        }
+        Ok(result)
     }
 
     /// returns the top element of the stack without removing it from the stack
@@ -103,20 +104,16 @@ impl Stack {
         }
     }
 
-    pub fn peek_index_check_type(
-        &self,
-        index: i16,
-        type_: constants::PrimitiveType,
-    ) -> Result<StackEntry, InterpreterError> {
+    pub fn peek_index_check_type(&self,
+                                 index: i16,
+                                 type_: constants::PrimitiveType)
+                                 -> Result<StackEntry, InterpreterError> {
         if self.internal_stack.len() > index as usize {
             let current_val = self.internal_stack[self.internal_stack.len() - 1 - index as usize];
             if current_val.entry_type == type_ {
                 return Ok(current_val);
             }
-            Err(InterpreterError::InvalidVariableType(
-                current_val.entry_type,
-                type_,
-            ))
+            Err(InterpreterError::InvalidVariableType(current_val.entry_type, type_))
         } else {
             Err(InterpreterError::StackUnderflowError)
         }
@@ -126,8 +123,7 @@ impl Stack {
         if (index as usize) < self.internal_stack.len() {
             let maxlen = self.internal_stack.len();
             if let Some(value_to_update) =
-                self.internal_stack.get_mut(maxlen - (index as usize) - 1)
-            {
+                self.internal_stack.get_mut(maxlen - (index as usize) - 1) {
                 (*value_to_update).value = newval.value;
                 (*value_to_update).entry_type = newval.entry_type;
                 return Ok(());

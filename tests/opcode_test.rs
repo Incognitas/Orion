@@ -1,9 +1,11 @@
 extern crate interpreterlib;
 
-use interpreterlib::{bytecodes, constants, context, frame, interpreter, stack};
+use interpreterlib::{bytecodes, constants, context, frame, interpreter, stack, objects, traits};
 
 use interpreter::{BytecodeData, BytecodeType};
 use stack::{StackElementType, StackEntry};
+use objects::JCVMObject;
+use traits::BufferAccessor;
 
 pub fn execute_with_context(mut ctx: &mut context::Context) {
     let _result = interpreter::interpreter(&mut ctx);
@@ -34,10 +36,8 @@ fn nop_test() {
 fn opcode_aconst_null_test() {
     let ctx = execute_bytecode(bytecodes::bytecode::aconst_null as u8);
     let top_entry = ctx.operand_stack.top().unwrap();
-    assert!(
-        top_entry.value == constants::NULL_HANDLE
-            && top_entry.is_of_type(constants::PrimitiveType::REFERENCE)
-    );
+    assert_eq!(top_entry.value, constants::NULL_HANDLE);
+    assert!(top_entry.is_of_type(constants::PrimitiveType::REFERENCE));
 }
 
 
@@ -48,10 +48,8 @@ fn opcode_sconst_x_test() {
         let expected_value = (x as i16) - (bytecodes::bytecode::sconst_0 as i16);
         let ctx = execute_bytecode(x);
         let top_entry = ctx.operand_stack.top().unwrap();
-        assert!(
-            (top_entry.value == expected_value)
-                && (top_entry.is_of_type(constants::PrimitiveType::SHORT))
-        );
+        assert_eq!(top_entry.value, expected_value);
+        assert!(top_entry.is_of_type(constants::PrimitiveType::SHORT));
     }
 }
 
@@ -65,16 +63,13 @@ fn opcode_iconst_x_test() {
         let expected_value1 = ((x as i32) - (bytecodes::bytecode::iconst_0 as i32) >> 16) as i16;
         let expected_value2 = ((x as i32) - (bytecodes::bytecode::iconst_0 as i32) & 0xFFFF) as i16;
         let ctx = execute_bytecode(x);
-        let top_entry1 = ctx.operand_stack.peek_index(0).unwrap();
-        let top_entry2 = ctx.operand_stack.peek_index(1).unwrap();
+        
+        let top_entry1 = ctx.operand_stack.peek_index_check_type(0, constants::PrimitiveType::INTEGER).unwrap();
+        let top_entry2 = ctx.operand_stack.peek_index_check_type(1, constants::PrimitiveType::INTEGER).unwrap();
         // 2 MSB of value are at the top of the stack
         // next two bytes are in the next index of the stack
-        assert!(
-            (top_entry2.value == expected_value2)
-                && (top_entry2.is_of_type(constants::PrimitiveType::INTEGER))
-                && (top_entry1.value == expected_value1)
-                && (top_entry1.is_of_type(constants::PrimitiveType::INTEGER))
-        );
+        assert_eq!(top_entry2.value, expected_value2);
+        assert_eq!(top_entry1.value, expected_value1);
     }
 }
 
@@ -85,20 +80,15 @@ fn opcode_iconst_x_test() {
 #[test]
 fn opcode_bspush_test() {
     let exp_value: u16 = 0xFFA5; /*0xA5*/
-    let datatoexecute: BytecodeData = vec![
-        bytecodes::bytecode::bspush as BytecodeType,
-        exp_value as BytecodeType,
-    ];
+    let datatoexecute: BytecodeData = vec![bytecodes::bytecode::bspush as BytecodeType,
+                                           exp_value as BytecodeType];
     let ctx = execute(datatoexecute);
     let top_entry = ctx.operand_stack.top().unwrap();
-    println!(
-        "Found value : {:04X} instead of {:04X}",
-        top_entry.value,
-        exp_value
-    );
-    assert!(
-        top_entry.value as u16 == exp_value && top_entry.is_of_type(constants::PrimitiveType::SHORT)
-    );
+    println!("Found value : {:04X} instead of {:04X}",
+             top_entry.value,
+             exp_value);
+    assert_eq!(top_entry.value as u16, exp_value);
+    assert!(top_entry.is_of_type(constants::PrimitiveType::SHORT));
 }
 
 
@@ -108,21 +98,16 @@ fn opcode_bspush_test() {
 #[test]
 fn opcode_sspush_test() {
     let exp_value: u16 = 0xA55A; /*0xA5*/
-    let datatoexecute: BytecodeData = vec![
-        bytecodes::bytecode::sspush as BytecodeType,
-        (exp_value >> 8) as BytecodeType,
-        exp_value as BytecodeType,
-    ];
+    let datatoexecute: BytecodeData = vec![bytecodes::bytecode::sspush as BytecodeType,
+                                           (exp_value >> 8) as BytecodeType,
+                                           exp_value as BytecodeType];
     let ctx = execute(datatoexecute);
     let top_entry = ctx.operand_stack.top().unwrap();
-    println!(
-        "Found value : {:04X} instead of {:04X}",
-        top_entry.value,
-        exp_value
-    );
-    assert!(
-        top_entry.value as u16 == exp_value && top_entry.is_of_type(constants::PrimitiveType::SHORT)
-    );
+    println!("Found value : {:04X} instead of {:04X}",
+             top_entry.value,
+             exp_value);
+    assert_eq!(top_entry.value as u16, exp_value);
+    assert!(top_entry.is_of_type(constants::PrimitiveType::SHORT));
 }
 
 
@@ -132,21 +117,16 @@ fn opcode_sspush_test() {
 #[test]
 fn opcode_bipush_test() {
     let exp_value: u32 = 0xFFFFFFA5; /*0xA5 + sign extension*/
-    let datatoexecute: BytecodeData = vec![
-        bytecodes::bytecode::bipush as BytecodeType,
-        exp_value as BytecodeType,
-    ];
+    let datatoexecute: BytecodeData = vec![bytecodes::bytecode::bipush as BytecodeType,
+                                           exp_value as BytecodeType];
     let ctx = execute(datatoexecute);
 
-    let entry1 = ctx.operand_stack.peek_index(0).unwrap();
-    let entry2 = ctx.operand_stack.peek_index(1).unwrap();
+    let entry1 = ctx.operand_stack.peek_index_check_type(0, constants::PrimitiveType::INTEGER).unwrap();
+    let entry2 = ctx.operand_stack.peek_index_check_type(1, constants::PrimitiveType::INTEGER).unwrap();
     let result: u32 = (entry1.value as u32) << 16 | (entry2.value as u32);
 
     println!("Found value : {:08X} instead of {:08X}", result, exp_value);
-    assert!(
-        result == exp_value && entry1.is_of_type(constants::PrimitiveType::INTEGER)
-            && entry2.is_of_type(constants::PrimitiveType::INTEGER)
-    );
+    assert_eq!(result, exp_value);
 }
 
 ///
@@ -155,22 +135,17 @@ fn opcode_bipush_test() {
 #[test]
 fn opcode_sipush_test() {
     let exp_value: u32 = 0xFFFFA55A; /*0xA55A + sign extension*/
-    let datatoexecute: BytecodeData = vec![
-        bytecodes::bytecode::sipush as BytecodeType,
-        (exp_value >> 8) as BytecodeType,
-        exp_value as BytecodeType,
-    ];
+    let datatoexecute: BytecodeData = vec![bytecodes::bytecode::sipush as BytecodeType,
+                                           (exp_value >> 8) as BytecodeType,
+                                           exp_value as BytecodeType];
     let ctx = execute(datatoexecute);
 
-    let entry1 = ctx.operand_stack.peek_index(0).unwrap();
-    let entry2 = ctx.operand_stack.peek_index(1).unwrap();
+    let entry1 = ctx.operand_stack.peek_index_check_type(0, constants::PrimitiveType::INTEGER).unwrap();
+    let entry2 = ctx.operand_stack.peek_index_check_type(1, constants::PrimitiveType::INTEGER).unwrap();
     let result: u32 = (entry1.value as u32) << 16 | (entry2.value as u32);
 
     println!("Found value : {:08X} instead of {:08X}", result, exp_value);
-    assert!(
-        result == exp_value && entry1.is_of_type(constants::PrimitiveType::INTEGER)
-            && entry2.is_of_type(constants::PrimitiveType::INTEGER)
-    );
+    assert_eq!(result, exp_value);
 }
 
 
@@ -180,13 +155,11 @@ fn opcode_sipush_test() {
 #[test]
 fn opcode_iipush_test() {
     let exp_value: u32 = 0xA55AA55A;
-    let datatoexecute: BytecodeData = vec![
-        bytecodes::bytecode::iipush as BytecodeType,
-        (exp_value >> 24) as BytecodeType,
-        (exp_value >> 16) as BytecodeType,
-        (exp_value >> 8) as BytecodeType,
-        exp_value as BytecodeType,
-    ];
+    let datatoexecute: BytecodeData = vec![bytecodes::bytecode::iipush as BytecodeType,
+                                           (exp_value >> 24) as BytecodeType,
+                                           (exp_value >> 16) as BytecodeType,
+                                           (exp_value >> 8) as BytecodeType,
+                                           exp_value as BytecodeType];
     let mut ctx = execute(datatoexecute);
 
     let entry1 = ctx.operand_stack.pop().unwrap();
@@ -195,10 +168,9 @@ fn opcode_iipush_test() {
     let result: u32 = ((entry1.value as u16) as u32) << 16 | ((entry2.value as u16) as u32);
 
     println!("Found value : {:08X} instead of {:08X}", result, exp_value);
-    assert!(
-        result == exp_value && entry1.is_of_type(constants::PrimitiveType::INTEGER)
-            && entry2.is_of_type(constants::PrimitiveType::INTEGER)
-    );
+    assert_eq!(result, exp_value);
+    assert!(entry1.is_of_type(constants::PrimitiveType::INTEGER));
+    assert!(entry2.is_of_type(constants::PrimitiveType::INTEGER));
 }
 
 ///
@@ -211,10 +183,8 @@ fn opcode_aload_test() {
     let idx: BytecodeType = 1;
     let datatoexecute: BytecodeData = vec![bytecodes::bytecode::aload as BytecodeType, idx];
     let mut ctx = context::Context::new(datatoexecute);
-    let exp_value = StackEntry::from_values(
-        (0xA55A as u16) as StackElementType,
-        constants::PrimitiveType::REFERENCE,
-    );
+    let exp_value = StackEntry::from_values((0xA55A as u16) as StackElementType,
+                                            constants::PrimitiveType::REFERENCE);
 
     ctx.frame_stack.push(frame::Frame::new(2));
     {
@@ -227,7 +197,8 @@ fn opcode_aload_test() {
     // check that we have the right local in the stack (first, check it is a reference)
     let result = ctx.operand_stack.top().unwrap();
 
-    assert!(result.value == exp_value.value && result.is_of_type(constants::PrimitiveType::REFERENCE));
+    assert_eq!(result.value, exp_value.value);
+    assert!(result.is_of_type(constants::PrimitiveType::REFERENCE));
 }
 
 
@@ -241,8 +212,8 @@ fn opcode_sload_test() {
     let idx: BytecodeType = 1;
     let datatoexecute: BytecodeData = vec![bytecodes::bytecode::sload as BytecodeType, idx];
     let mut ctx = context::Context::new(datatoexecute);
-    let exp_value =
-        StackEntry::from_values((0xA55A as u16) as StackElementType, constants::PrimitiveType::SHORT);
+    let exp_value = StackEntry::from_values((0xA55A as u16) as StackElementType,
+                                            constants::PrimitiveType::SHORT);
 
     ctx.frame_stack.push(frame::Frame::new(2));
     {
@@ -255,7 +226,8 @@ fn opcode_sload_test() {
     // check that we have the right local in the stack (first, check it is a reference)
     let result = ctx.operand_stack.top().unwrap();
 
-    assert!(result.value == exp_value.value && result.is_of_type(constants::PrimitiveType::SHORT));
+    assert_eq!(result.value, exp_value.value);
+    assert!(result.is_of_type(constants::PrimitiveType::SHORT));
 }
 
 
@@ -274,34 +246,26 @@ fn opcode_iload_test() {
     ctx.frame_stack.push(frame::Frame::new((idx + 2) as u8));
     {
         let top_frame = ctx.frame_stack.top_mut().unwrap();
-        top_frame
-            .set_local(
-                idx as i16,
-                StackEntry::from_values((exp_value >> 16) as StackElementType, constants::PrimitiveType::INTEGER),
-            )
+        top_frame.set_local(idx as i16,
+                       StackEntry::from_values((exp_value >> 16) as StackElementType,
+                                               constants::PrimitiveType::INTEGER))
             .unwrap();
-        top_frame
-            .set_local(
-                (idx + 1) as i16,
-                StackEntry::from_values(
-                    (exp_value & 0xFFFF) as StackElementType,
-                    constants::PrimitiveType::INTEGER,
-                ),
-            )
+        top_frame.set_local((idx + 1) as i16,
+                       StackEntry::from_values((exp_value & 0xFFFF) as StackElementType,
+                                               constants::PrimitiveType::INTEGER))
             .unwrap();
     }
     // execute code
     execute_with_context(&mut ctx);
 
     // check that we have the right local in the stack (first, check it is a reference)
-    let result1 = ctx.operand_stack.peek_index(0).unwrap();
-    let result2 = ctx.operand_stack.peek_index(1).unwrap();
+    let result1 =
+        ctx.operand_stack.peek_index_check_type(0, constants::PrimitiveType::INTEGER).unwrap();
+    let result2 =
+        ctx.operand_stack.peek_index_check_type(1, constants::PrimitiveType::INTEGER).unwrap();
 
-    assert!(
-        result1.value == (exp_value >> 16) as i16 && result2.value == (exp_value & 0xFFFF) as i16
-            && result1.is_of_type(constants::PrimitiveType::INTEGER)
-            && result2.is_of_type(constants::PrimitiveType::INTEGER)
-    );
+    assert_eq!(result1.value, (exp_value >> 16) as i16);
+    assert_eq!(result2.value, (exp_value & 0xFFFF) as i16);
 }
 
 
@@ -315,8 +279,10 @@ fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: constants::P
     let mut ctx = context::Context::new(datatoexecute);
     let exp_value = StackEntry::from_values((0xA55A as u16) as StackElementType, type_);
 
+    // create a new frame
     ctx.frame_stack.push(frame::Frame::new(idx + 1));
     {
+        // push a value on the frame
         let top_frame = ctx.frame_stack.top_mut().unwrap();
         top_frame.set_local(idx as i16, exp_value).unwrap();
     }
@@ -326,7 +292,8 @@ fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: constants::P
     // check that we have the right local in the stack (first, check it is a reference)
     let result = ctx.operand_stack.top().unwrap();
 
-    assert!(result.value == exp_value.value && result.is_of_type(type_));
+    assert_eq!(result.value, exp_value.value);
+    assert!(result.is_of_type(type_));
 }
 
 ///
@@ -335,11 +302,9 @@ fn opcode_xload_x_unittest(bc: bytecodes::bytecode, idx: u8, type_: constants::P
 #[test]
 fn opcode_aload_x_tests() {
     for curbc in bytecodes::bytecode::aload_0 as u8..bytecodes::bytecode::aload_3 as u8 {
-        opcode_xload_x_unittest(
-            bytecodes::bytecode::from(curbc).unwrap(),
-            (curbc - (bytecodes::bytecode::aload_0 as u8)),
-            constants::PrimitiveType::REFERENCE,
-        );
+        opcode_xload_x_unittest(bytecodes::bytecode::from(curbc).unwrap(),
+                                (curbc - (bytecodes::bytecode::aload_0 as u8)),
+                                constants::PrimitiveType::REFERENCE);
     }
 }
 
@@ -350,10 +315,90 @@ fn opcode_aload_x_tests() {
 #[test]
 fn opcode_sload_x_tests() {
     for curbc in bytecodes::bytecode::sload_0 as u8..bytecodes::bytecode::sload_3 as u8 {
-        opcode_xload_x_unittest(
-            bytecodes::bytecode::from(curbc).unwrap(),
-            (curbc - (bytecodes::bytecode::sload_0 as u8)),
-            constants::PrimitiveType::SHORT,
-        );
+        opcode_xload_x_unittest(bytecodes::bytecode::from(curbc).unwrap(),
+                                (curbc - (bytecodes::bytecode::sload_0 as u8)),
+                                constants::PrimitiveType::SHORT);
     }
+}
+
+///
+/// Tests all iload_x opcodes (from standard specification)
+///
+#[test]
+fn opcode_iload_x_tests() {
+    for curbc in bytecodes::bytecode::iload_0 as u8..bytecodes::bytecode::iload_3 as u8 {
+        // prepare data for aload (a local variable of type reference in local variables at index 1)
+        // we voluntarily don't  use offset 0 to make sure we pick the right value
+        let datatoexecute: BytecodeData = vec![curbc as BytecodeType];
+        let mut ctx = context::Context::new(datatoexecute);
+        let mut exp_value = StackEntry::from_values((0xA55A as u16) as StackElementType,
+                                                    constants::PrimitiveType::INTEGER);
+        let idx = curbc - (bytecodes::bytecode::iload_0 as u8);
+        // create a new frame
+        ctx.frame_stack.push(frame::Frame::new(idx + 2));
+        {
+            // push a value on the frame
+            let top_frame = ctx.frame_stack.top_mut().unwrap();
+            top_frame.set_local(idx as i16, exp_value).unwrap();
+            exp_value.value = !exp_value.value;
+            top_frame.set_local((idx + 1) as i16, exp_value).unwrap();
+        }
+
+        // execute code
+        execute_with_context(&mut ctx);
+
+        // check that we have the right local in the stack (first, check it is a reference)
+        let result1 = ctx.operand_stack.pop_check_type(constants::PrimitiveType::INTEGER).unwrap();
+        let result2 = ctx.operand_stack.pop_check_type(constants::PrimitiveType::INTEGER).unwrap();
+
+        assert_eq!(result1.value, !exp_value.value);
+        assert_eq!(result2.value, exp_value.value);
+    }
+}
+
+
+///
+/// Tests all iload_x opcodes (from standard specification)
+///
+fn opcode_xaload_x_tests(bc: bytecodes::bytecode, type_: constants::PrimitiveType) {
+    let datatoexecute: BytecodeData = vec![bc as BytecodeType];
+    let mut ctx = context::Context::new(datatoexecute);
+
+    // first, push the index in the array
+    let exp_value: u16 = 0xA55A;
+    let is_persistent = true;
+    let size_array: i16 = 10;
+    let owner: i16 = 0;
+    let flags: u8 = constants::ObjectFlags::ARRAY as u8;
+    let idx: i16 = 2;
+    // create the actual array
+    let mut created_array = JCVMObject::new_array(owner, flags, type_, size_array, is_persistent);
+    // add a specific value that we will be able to check afterwards
+    created_array.write_s((idx * constants::REFERENCE_SIZE) as usize, exp_value as i16).unwrap();
+    // register the array to the objects manager
+    let refidx = ctx.object_manager.add_object(created_array);
+
+    // now prepare the stack with approriate content
+    // first, the index
+    ctx.operand_stack.push(StackEntry::from_values(idx, constants::PrimitiveType::SHORT)).unwrap();
+    // next, the arrayref
+    ctx.operand_stack
+        .push(StackEntry::from_values(refidx as i16, constants::PrimitiveType::REFERENCE))
+        .unwrap();
+
+    // execute code
+    execute_with_context(&mut ctx);
+
+    // now check that we have an entry with the given value on the stack
+    let result = ctx.operand_stack.pop_check_type(type_).unwrap();
+    println!("obtained:{:04X}, expected: {:04X}",
+             result.value as u16,
+             exp_value);
+    assert_eq!(result.value as u16, exp_value);
+}
+
+#[test]
+fn opcode_aaload_test() {
+    opcode_xaload_x_tests(bytecodes::bytecode::aaload,
+                          constants::PrimitiveType::REFERENCE);
 }

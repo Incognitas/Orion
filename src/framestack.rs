@@ -7,9 +7,7 @@ pub struct FrameStack {
 
 impl FrameStack {
     pub fn new() -> FrameStack {
-        FrameStack {
-            internal_stack: Vec::new(),
-        }
+        FrameStack { internal_stack: Vec::new() }
     }
 
     pub fn push(&mut self, new_frame: Frame) {
@@ -19,14 +17,14 @@ impl FrameStack {
     pub fn top(&self) -> Result<&Frame, InterpreterError> {
         match self.internal_stack.last() {
             Some(result) => Ok(result),
-            None => Err(InterpreterError::StackUnderflowError)
+            None => Err(InterpreterError::StackUnderflowError),
         }
     }
 
     pub fn top_mut(&mut self) -> Result<&mut Frame, InterpreterError> {
         match self.internal_stack.last_mut() {
             Some(result) => Ok(result),
-            None => Err(InterpreterError::StackUnderflowError)
+            None => Err(InterpreterError::StackUnderflowError),
         }
     }
 }

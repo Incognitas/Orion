@@ -10,8 +10,6 @@ fn main() {
 
     //println!("Hello, world!");
     let _result = interpreter::interpreter(&mut execution_context);
-    println!(
-        "Content : {:X}",
-        execution_context.operand_stack.pop().unwrap().value
-    )
+    println!("Content : {:X}",
+             execution_context.operand_stack.pop().unwrap().value)
 }
