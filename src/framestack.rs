@@ -7,7 +7,9 @@ pub struct FrameStack {
 
 impl FrameStack {
     pub fn new() -> FrameStack {
-        FrameStack { internal_stack: Vec::new() }
+        FrameStack {
+            internal_stack: Vec::new(),
+        }
     }
 
     pub fn push(&mut self, new_frame: Frame) {

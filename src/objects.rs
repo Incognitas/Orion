@@ -1,6 +1,6 @@
 use constants;
 use jcvmerrors::InterpreterError;
-use traits::{HasType, BufferAccessor};
+use traits::{BufferAccessor, HasType};
 use interpreter::BytecodeType;
 
 type InternalBuffer = Vec<i8>;
@@ -56,17 +56,16 @@ impl BufferAccessor for JCVMObject {
         self.put(offset + 2, (val >> 8) as i8)?;
         self.put(offset + 3, i8::from(val as i8))
     }
-    
 }
 
-
 impl JCVMObject {
-    pub fn new(owner: i16,
-               flags_: u8,
-               ptype: constants::PrimitiveType,
-               length: i16,
-               persistent: bool)
-               -> JCVMObject {
+    pub fn new(
+        owner: i16,
+        flags_: u8,
+        ptype: constants::PrimitiveType,
+        length: i16,
+        persistent: bool,
+    ) -> JCVMObject {
         JCVMObject {
             owner: owner,
             object_flags: flags_,
@@ -77,12 +76,13 @@ impl JCVMObject {
         }
     }
 
-    pub fn new_array(owner: i16,
-                     flags_: u8,
-                     ptype: constants::PrimitiveType,
-                     length: i16,
-                     persistent: bool)
-                     -> JCVMObject {
+    pub fn new_array(
+        owner: i16,
+        flags_: u8,
+        ptype: constants::PrimitiveType,
+        length: i16,
+        persistent: bool,
+    ) -> JCVMObject {
         JCVMObject {
             owner: owner,
             object_flags: flags_ | (constants::ObjectFlags::ARRAY as u8),
@@ -106,7 +106,9 @@ impl JCVMObject {
     }
 
     pub fn get(&self, offset: usize) -> Result<BytecodeType, InterpreterError> {
-        let res = self.content.get(offset).ok_or(InterpreterError::IndexOutOfBound)?;
+        let res = self.content
+            .get(offset)
+            .ok_or(InterpreterError::IndexOutOfBound)?;
         Ok(*res)
     }
 
@@ -114,11 +116,9 @@ impl JCVMObject {
         if offset < self.content.len() {
             self.content[offset] = val;
             Ok(())
-        }
-        else {
+        } else {
             Err(InterpreterError::IndexOutOfBound)
         }
-        
     }
 
     pub fn is_array(&self) -> bool {

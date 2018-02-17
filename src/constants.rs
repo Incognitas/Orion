@@ -1,8 +1,8 @@
 pub const NULL_HANDLE: i16 = 0;
 
 // some sizes...
-pub const REFERENCE_SIZE:i16 = 2;
-pub const BYTE_SIZE:i16 = 1;
+pub const REFERENCE_SIZE: i16 = 2;
+pub const BYTE_SIZE: i16 = 1;
 
 // constants
 // visibility mask : global or not global (this will impact firewall rules)
@@ -12,7 +12,6 @@ pub enum ObjectFlags {
     GLOBAL = 0x1,
     ARRAY = 0x2,
 }
-
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u8)]

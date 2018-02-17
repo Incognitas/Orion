@@ -3,14 +3,14 @@ use jcvmerrors::InterpreterError;
 
 use interpreter::{BytecodeData, BytecodeType};
 
-pub struct BytecodeFetcher {
-    bc_array: BytecodeData,
+pub struct BytecodeFetcher<'a> {
+    bc_array: &'a BytecodeData,
     offset: usize,
 }
 
-impl BytecodeFetcher {
+impl<'a> BytecodeFetcher<'a> {
     /// Initialization method
-    pub fn new(bc: BytecodeData) -> BytecodeFetcher {
+    pub fn new(bc: &BytecodeData) -> BytecodeFetcher {
         BytecodeFetcher {
             bc_array: bc,
             offset: 0,

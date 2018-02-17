@@ -6,17 +6,15 @@ use bcutils::BytecodeFetcher;
 use objectsmanager::ObjectManager;
 use interpreter::BytecodeData;
 
-// pub struct Context<'a> {
-//     pub bytecode_fetcher: BytecodeFetcher<'a>,
-pub struct Context {
-    pub bytecode_fetcher: BytecodeFetcher,
+pub struct Context<'a> {
+    pub bytecode_fetcher: BytecodeFetcher<'a>,
     pub operand_stack: Stack,
     pub frame_stack: FrameStack,
     pub object_manager: ObjectManager,
 }
 
-impl Context {
-    pub fn new(bc: BytecodeData) -> Context {
+impl<'a> Context<'a> {
+    pub fn new(bc: &BytecodeData) -> Context {
         Context {
             bytecode_fetcher: BytecodeFetcher::new(bc),
             operand_stack: Stack::new(256),
