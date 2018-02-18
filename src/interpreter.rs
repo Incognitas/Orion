@@ -5,21 +5,11 @@ use jcvmerrors::InterpreterError;
 use constants;
 use exceptions;
 use traits::{BufferAccessor, HasType};
+use interpreterutils::xaload;
 
 pub type BytecodeType = i8;
 // pub type BytecodeData = Vec<BytecodeType>;
 pub type BytecodeData = [BytecodeType];
-
-// macro allowing to simplify null reference check
-macro_rules! check_null_reference {
-    ($variable:ident, $ctx:ident) => (
-        if !$variable.is_of_type(constants::PrimitiveType::REFERENCE)
-            || $variable.value == constants::NULL_HANDLE {
-                try!(exceptions::throw_exception($ctx,
-                     exceptions::InterpreterException::NullPointerException));
-        }
-    )
-}
 
 pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterError> {
     loop {
@@ -37,64 +27,62 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             }
             // bytecode 1 : ACONST_NULL
             bytecode::aconst_null => {
-                try!(
-                    execution_context
-                        .operand_stack
-                        .apush(constants::NULL_HANDLE)
-                );
+                execution_context
+                    .operand_stack
+                    .apush(constants::NULL_HANDLE);
             }
 
             // bytecode 2 : SCONST_M1
             bytecode::sconst_m1 => {
-                execution_context.operand_stack.spush(-1 as i16)?;
+                execution_context.operand_stack.spush(-1 as i16);
             }
 
             // bytecode 3: SCONST_0
-            bytecode::sconst_0 => execution_context.operand_stack.spush(0)?,
+            bytecode::sconst_0 => execution_context.operand_stack.spush(0),
             // bytecode 4: SCONST_1
-            bytecode::sconst_1 => execution_context.operand_stack.spush(1)?,
+            bytecode::sconst_1 => execution_context.operand_stack.spush(1),
             // bytecode 5: SCONST_2
-            bytecode::sconst_2 => execution_context.operand_stack.spush(2)?,
+            bytecode::sconst_2 => execution_context.operand_stack.spush(2),
             // bytecode 6: SCONST_3
-            bytecode::sconst_3 => execution_context.operand_stack.spush(3)?,
+            bytecode::sconst_3 => execution_context.operand_stack.spush(3),
             // bytecode 7: SCONST_4
-            bytecode::sconst_4 => execution_context.operand_stack.spush(4)?,
+            bytecode::sconst_4 => execution_context.operand_stack.spush(4),
             // bytecode 8: SCONST_5
-            bytecode::sconst_5 => execution_context.operand_stack.spush(5)?,
+            bytecode::sconst_5 => execution_context.operand_stack.spush(5),
             // bytecode 9: ICONST_M1
-            bytecode::iconst_m1 => execution_context.operand_stack.ipush(-1)?,
+            bytecode::iconst_m1 => execution_context.operand_stack.ipush(-1),
             // bytecode 10: ICONST_0
-            bytecode::iconst_0 => execution_context.operand_stack.ipush(0)?,
+            bytecode::iconst_0 => execution_context.operand_stack.ipush(0),
             // bytecode 11: ICONST_1
-            bytecode::iconst_1 => execution_context.operand_stack.ipush(1)?,
+            bytecode::iconst_1 => execution_context.operand_stack.ipush(1),
             // bytecode 12: ICONST_2
-            bytecode::iconst_2 => execution_context.operand_stack.ipush(2)?,
+            bytecode::iconst_2 => execution_context.operand_stack.ipush(2),
             // bytecode 13: ICONST_3
-            bytecode::iconst_3 => execution_context.operand_stack.ipush(3)?,
+            bytecode::iconst_3 => execution_context.operand_stack.ipush(3),
             // bytecode 14: ICONST_4
-            bytecode::iconst_4 => execution_context.operand_stack.ipush(4)?,
+            bytecode::iconst_4 => execution_context.operand_stack.ipush(4),
             // bytecode 15: ICONST_5
-            bytecode::iconst_5 => execution_context.operand_stack.ipush(5)?,
+            bytecode::iconst_5 => execution_context.operand_stack.ipush(5),
             // bytecode 16: BSPUSH
             bytecode::bspush => execution_context
                 .operand_stack
-                .spush(i16::from(execution_context.bytecode_fetcher.fetch_b()?))?,
+                .spush(i16::from(execution_context.bytecode_fetcher.fetch_b()?)),
             // bytecode 17: SSPUSH
             bytecode::sspush => execution_context
                 .operand_stack
-                .spush(execution_context.bytecode_fetcher.fetch_s()?)?,
+                .spush(execution_context.bytecode_fetcher.fetch_s()?),
             // bytecode 18: BIPUSH
             bytecode::bipush => execution_context
                 .operand_stack
-                .ipush(execution_context.bytecode_fetcher.fetch_b()? as i32)?,
+                .ipush(execution_context.bytecode_fetcher.fetch_b()? as i32),
             // bytecode 19: SIPUSH
             bytecode::sipush => execution_context
                 .operand_stack
-                .ipush(execution_context.bytecode_fetcher.fetch_s()? as i32)?,
+                .ipush(execution_context.bytecode_fetcher.fetch_s()? as i32),
             // bytecode 20: IIPUSH
             bytecode::iipush => execution_context
                 .operand_stack
-                .ipush(execution_context.bytecode_fetcher.fetch_i()? as i32)?,
+                .ipush(execution_context.bytecode_fetcher.fetch_i()? as i32),
             // bytecode 21: ALOAD
             bytecode::aload => {
                 let index = execution_context.bytecode_fetcher.fetch_b()?;
@@ -103,7 +91,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     .current_frame()?
                     .get_local_check_type(i16::from(index), constants::PrimitiveType::REFERENCE)?;
 
-                execution_context.operand_stack.push(current_local)?;
+                execution_context.operand_stack.push(current_local);
             }
 
             // bytecode 22: SLOAD
@@ -114,7 +102,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     .current_frame()?
                     .get_local_check_type(i16::from(index), constants::PrimitiveType::SHORT)?;
 
-                execution_context.operand_stack.push(current_local)?;
+                execution_context.operand_stack.push(current_local);
             }
 
             // bytecode 23: ILOAD
@@ -131,8 +119,8 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     .get_local_check_type(i16::from(index + 1), constants::PrimitiveType::INTEGER)?;
 
                 // push variables in reverse order to keep the original order
-                execution_context.operand_stack.push(current_local2)?;
-                execution_context.operand_stack.push(current_local1)?;
+                execution_context.operand_stack.push(current_local2);
+                execution_context.operand_stack.push(current_local1);
             }
 
             // bytecode 24...27: ALOAD_0...ALOAD_3
@@ -143,7 +131,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     constants::PrimitiveType::REFERENCE,
                 )?;
 
-                execution_context.operand_stack.push(current_local)?;
+                execution_context.operand_stack.push(current_local);
             }
 
             // bytecode 28...31: SLOAD_0...SLOAD_3
@@ -154,7 +142,7 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     constants::PrimitiveType::SHORT,
                 )?;
 
-                execution_context.operand_stack.push(current_local)?;
+                execution_context.operand_stack.push(current_local);
             }
 
             // bytecode 32...35: ILOAD_0...ILOAD_3
@@ -166,57 +154,27 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     .current_frame()?
                     .get_local_check_type(current_idx + 1, constants::PrimitiveType::INTEGER)?;
 
-                execution_context.operand_stack.push(current_local)?;
+                execution_context.operand_stack.push(current_local);
 
                 current_local = execution_context
                     .current_frame()?
                     .get_local_check_type(current_idx, constants::PrimitiveType::INTEGER)?;
 
-                execution_context.operand_stack.push(current_local)?;
+                execution_context.operand_stack.push(current_local);
             }
 
             bytecode::aaload => {
-                let arrayref = execution_context
-                    .operand_stack
-                    .pop_check_type(constants::PrimitiveType::REFERENCE)?;
-                let index = execution_context
-                    .operand_stack
-                    .pop_check_type(constants::PrimitiveType::SHORT)?;
-
-                check_null_reference!(arrayref, execution_context);
-
-                let associated_reference = execution_context
-                    .object_manager
-                    .get_object(arrayref.value as usize);
-
-                if let Ok(e) = associated_reference {
-                    // consistency check to make sure it is an array
-                    assert!(e.is_array());
-
-                    // in case of arrays, the primitive type represents the type of its elements
-                    assert!(e.is_of_type(constants::PrimitiveType::REFERENCE));
-
-                    // retrieve value of the reference of the array
-                    if let Ok(reference) =
-                        e.read_s((index.value * constants::REFERENCE_SIZE) as usize)
-                    {
-                        execution_context.operand_stack.apush(reference)?;
-                    } else {
-                        exceptions::throw_exception(
-                            execution_context,
-                            associated_reference.err().unwrap(),
-                        )?;
-                    }
-                } else {
-                    exceptions::throw_exception(
-                        execution_context,
-                        associated_reference.err().unwrap(),
-                    )?;
-                }
+                xaload(execution_context, constants::PrimitiveType::REFERENCE);
             }
-            //bytecode::baload,          // 37
-            //bytecode::saload,          // 38
-            //bytecode::iaload,          // 39
+            bytecode::baload => {
+                xaload(execution_context, constants::PrimitiveType::BYTE);
+            }
+            bytecode::saload => {
+                xaload(execution_context, constants::PrimitiveType::SHORT);
+            }
+            bytecode::iaload => {
+                xaload(execution_context, constants::PrimitiveType::INTEGER);
+            }
             //bytecode::astore,          // 40
             //bytecode::sstore,          // 41
             //bytecode::istore,          // 42
@@ -243,15 +201,15 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             //bytecode::dup_x,           // 63
             //bytecode::swap_x,          // 64
             bytecode::sadd => {
-                let value1 = execution_context.operand_stack.pop()?;
-                let value2 = execution_context.operand_stack.pop()?;
+                let value1 = execution_context.operand_stack.pop().unwrap();
+                let value2 = execution_context.operand_stack.pop().unwrap();
                 let res = value1.value + value2.value;
                 execution_context
                     .operand_stack
                     .push(StackEntry::from_values(
                         res,
                         constants::PrimitiveType::SHORT,
-                    ))?;
+                    ));
             }
             // bytecode::iadd,            // 66
             // bytecode::ssub,            // 67

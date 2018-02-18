@@ -1,4 +1,3 @@
-pub mod interpreter;
 pub mod bytecodes;
 pub mod context;
 
@@ -12,3 +11,6 @@ pub mod jcvmerrors;
 pub mod constants;
 pub mod objects;
 pub mod objectsmanager;
+#[macro_use]
+mod interpreterutils;
+pub mod interpreter;

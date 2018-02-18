@@ -8,11 +8,12 @@ pub enum InterpreterException {
     ArrayIndexOutOfBoundsException,
 }
 
-pub fn throw_exception(
-    _ctx: &Context,
-    _except: exceptions::InterpreterException,
-) -> Result<(), InterpreterError> {
+pub fn throw_exception(_ctx: &Context, _except: exceptions::InterpreterException) {
     println!("JC Exception raised !");
     panic!("WIP");
-    // Ok(())
+}
+
+pub fn throw_exception_from_interpretererror(_ctx: &Context, _except: InterpreterError) {
+    println!("JC Exception raised !");
+    panic!("WIP");
 }

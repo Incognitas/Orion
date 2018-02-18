@@ -1,8 +1,10 @@
 pub const NULL_HANDLE: i16 = 0;
 
 // some sizes...
-pub const REFERENCE_SIZE: i16 = 2;
-pub const BYTE_SIZE: i16 = 1;
+pub const REFERENCE_SIZE: usize = 2;
+pub const SHORT_SIZE: usize = 2;
+pub const INTEGER_SIZE: usize = 4;
+pub const BYTE_SIZE: usize = 1;
 
 // constants
 // visibility mask : global or not global (this will impact firewall rules)

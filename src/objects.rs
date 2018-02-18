@@ -54,7 +54,7 @@ impl BufferAccessor for JCVMObject {
         self.put(offset, (val >> 24) as i8)?;
         self.put(offset + 1, (val >> 16) as i8)?;
         self.put(offset + 2, (val >> 8) as i8)?;
-        self.put(offset + 3, i8::from(val as i8))
+        self.put(offset + 3, val as i8)
     }
 }
 

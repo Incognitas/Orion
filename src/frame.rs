@@ -19,10 +19,7 @@ impl Frame {
             // access and modify them later
             let to_be_initialised = &mut result;
             for _ in 0..max_stack {
-                to_be_initialised
-                    .locals_stack
-                    .push(StackEntry::new())
-                    .unwrap();
+                to_be_initialised.locals_stack.push(StackEntry::new());
             }
         }
 

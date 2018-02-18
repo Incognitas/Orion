@@ -52,40 +52,41 @@ impl Stack {
     }
 
     // push a value on the stack
-    pub fn push(&mut self, value: StackEntry) -> Result<(), InterpreterError> {
+    pub fn push(&mut self, value: StackEntry) {
         if self.internal_stack.len() < self.internal_stack.capacity() {
             self.internal_stack.push(value);
-            return Ok(());
+        } else {
+            panic!("Stack overflow error, is it a malformed code that is run ?");
         }
-        Err(InterpreterError::StackOverflowError)
     }
 
-    pub fn bpush(&mut self, value: i8) -> Result<(), InterpreterError> {
+    pub fn bpush(&mut self, value: i8) {
         self.push(StackEntry::from_values(
             value as i16,
             constants::PrimitiveType::BYTE,
         ))
     }
 
-    pub fn apush(&mut self, value: i16) -> Result<(), InterpreterError> {
+    pub fn apush(&mut self, value: i16) {
         self.push(StackEntry::from_values(
             value,
             constants::PrimitiveType::REFERENCE,
         ))
     }
 
-    pub fn spush(&mut self, value: i16) -> Result<(), InterpreterError> {
+    pub fn spush(&mut self, value: i16) {
         self.push(StackEntry::from_values(
             value,
             constants::PrimitiveType::SHORT,
-        ))
+        ));
     }
 
-    pub fn ipush(&mut self, value: i32) -> Result<(), InterpreterError> {
-        try!(self.push(StackEntry::from_values(
+    pub fn ipush(&mut self, value: i32) {
+        self.push(StackEntry::from_values(
             (value & 0xFFFF) as i16,
-            constants::PrimitiveType::INTEGER
-        )));
+            constants::PrimitiveType::INTEGER,
+        ));
+
         self.push(StackEntry::from_values(
             (value >> 16) as i16,
             constants::PrimitiveType::INTEGER,
@@ -93,24 +94,32 @@ impl Stack {
     }
 
     // removes top item and returns its value
-    pub fn pop(&mut self) -> Result<StackEntry, InterpreterError> {
-        self.internal_stack
-            .pop()
-            .ok_or(InterpreterError::StackUnderflowError)
+    pub fn pop(&mut self) -> Option<StackEntry> {
+        match self.internal_stack.pop() {
+            Some(res) => Some(res),
+            None => panic!("Stack underflow error ! Is it a malformed applet ?"),
+        }
     }
-
     pub fn pop_check_type(
         &mut self,
         type_: constants::PrimitiveType,
     ) -> Result<StackEntry, InterpreterError> {
-        let result = self.pop()?;
-        if !result.is_of_type(type_) {
-            return Err(InterpreterError::InvalidVariableType(
-                result.entry_type,
-                type_,
-            ));
-        }
-        Ok(result)
+        let result = match self.pop() {
+            Some(entry) => {
+                if !entry.is_of_type(type_) {
+                    return Err(InterpreterError::InvalidVariableType(
+                        entry.entry_type,
+                        type_,
+                    ));
+                }
+
+                return Ok(entry);
+            }
+
+            None => {
+                return Err(InterpreterError::StackUnderflowError);
+            }
+        };
     }
 
     /// returns the top element of the stack without removing it from the stack
