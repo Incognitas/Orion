@@ -45,6 +45,8 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
         assert!(e.is_of_type(type_));
 
         match type_ {
+            // for short and references, we perform thee same type of checks and
+            // fetch the array identically (2 by 2)
             constants::PrimitiveType::SHORT | constants::PrimitiveType::REFERENCE => {
                 let size_one_entry = constants::REFERENCE_SIZE;
                 match e.read_s((index.value as usize) * size_one_entry) {
@@ -59,7 +61,7 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
                     }
                 }
             }
-
+            // for bytes, each entry is one byte long
             constants::PrimitiveType::BYTE => {
                 let size_one_entry = constants::BYTE_SIZE;
                 match e.read_b((index.value as usize) * size_one_entry) {
@@ -73,6 +75,7 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
                 }
             }
 
+            // or integers readings are performed 4 bytes by 4 bytes
             constants::PrimitiveType::INTEGER => {
                 let size_one_entry = constants::INTEGER_SIZE;
                 match e.read_i((index.value as usize) * size_one_entry) {
@@ -93,4 +96,52 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
     } else {
         exceptions::throw_exception(execution_context, associated_reference.err().unwrap());
     }
+}
+
+///
+/// Manages astore, sstore, istore
+///
+pub fn xstore(execution_context: &mut Context, index: u8, type_: constants::PrimitiveType) {
+    match type_ {
+        // storing shorts and references follow the same pattern
+        constants::PrimitiveType::SHORT | constants::PrimitiveType::REFERENCE => {
+            // pop and check the type loaded from stack
+            let value_to_put = execution_context
+                .operand_stack
+                .pop_check_type(type_)
+                .unwrap();
+            //update local variable
+            execution_context
+                .current_frame_mut()
+                .unwrap()
+                .set_local(index as i16, value_to_put)
+                .unwrap();
+        }
+        // for integers, we pop and check 2 times on the stack
+        constants::PrimitiveType::INTEGER => {
+            let value_to_put1 = execution_context
+                .operand_stack
+                .pop_check_type(type_)
+                .unwrap();
+
+            let value_to_put2 = execution_context
+                .operand_stack
+                .pop_check_type(type_)
+                .unwrap();
+            // ... and we update 2 indexes in local variables stack
+            execution_context
+                .current_frame_mut()
+                .unwrap()
+                .set_local(index as i16, value_to_put1)
+                .unwrap();
+
+            execution_context
+                .current_frame_mut()
+                .unwrap()
+                .set_local((index + 1) as i16, value_to_put2)
+                .unwrap();
+        }
+
+        _ => panic!("Unknown type"),
+    };
 }

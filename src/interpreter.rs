@@ -5,7 +5,7 @@ use jcvmerrors::InterpreterError;
 use constants;
 use exceptions;
 use traits::{BufferAccessor, HasType};
-use interpreterutils::xaload;
+use interpreterutils::{xaload, xstore};
 
 pub type BytecodeType = i8;
 // pub type BytecodeData = Vec<BytecodeType>;
@@ -175,21 +175,40 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             bytecode::iaload => {
                 xaload(execution_context, constants::PrimitiveType::INTEGER);
             }
-            //bytecode::astore,          // 40
-            //bytecode::sstore,          // 41
-            //bytecode::istore,          // 42
-            //bytecode::astore_0,        // 43
-            //bytecode::astore_1,        // 44
-            //bytecode::astore_2,        // 45
-            //bytecode::astore_3,        // 46
-            //bytecode::sstore_0,        // 47
-            //bytecode::sstore_1,        // 48
-            //bytecode::sstore_2,        // 49
-            //bytecode::sstore_3,        // 50
-            //bytecode::istore_0,        // 51
-            //bytecode::istore_1,        // 52
-            //bytecode::istore_2,        // 53
-            //bytecode::istore_3,        // 54
+            bytecode::astore => {
+                let idx: u8 = execution_context.bytecode_fetcher.fetch_b()? as u8;
+                xstore(execution_context, idx, constants::PrimitiveType::REFERENCE);
+            }
+            bytecode::sstore => {
+                let idx: u8 = execution_context.bytecode_fetcher.fetch_b()? as u8;
+                xstore(execution_context, idx, constants::PrimitiveType::SHORT);
+            }
+            bytecode::istore => {
+                let idx: u8 = execution_context.bytecode_fetcher.fetch_b()? as u8;
+                xstore(execution_context, idx, constants::PrimitiveType::INTEGER);
+            }
+            bytecode::astore_0 | bytecode::astore_1 | bytecode::astore_2 | bytecode::astore_3 => {
+                xstore(
+                    execution_context,
+                    current_opcode as u8 - bytecode::astore_0 as u8,
+                    constants::PrimitiveType::REFERENCE,
+                );
+            }
+            bytecode::sstore_0 | bytecode::sstore_1 | bytecode::sstore_2 | bytecode::sstore_3 => {
+                xstore(
+                    execution_context,
+                    current_opcode as u8 - bytecode::sstore_0 as u8,
+                    constants::PrimitiveType::SHORT,
+                );
+            }
+
+            bytecode::istore_0 | bytecode::istore_1 | bytecode::istore_2 | bytecode::istore_3 => {
+                xstore(
+                    execution_context,
+                    current_opcode as u8 - bytecode::istore_0 as u8,
+                    constants::PrimitiveType::INTEGER,
+                );
+            }
             //bytecode::aastore,         // 55
             //bytecode::bastore,         // 56
             //bytecode::sastore,         // 57
@@ -201,8 +220,14 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
             //bytecode::dup_x,           // 63
             //bytecode::swap_x,          // 64
             bytecode::sadd => {
-                let value1 = execution_context.operand_stack.pop().unwrap();
-                let value2 = execution_context.operand_stack.pop().unwrap();
+                let value1 = execution_context
+                    .operand_stack
+                    .pop_check_type(constants::PrimitiveType::SHORT)
+                    .unwrap();
+                let value2 = execution_context
+                    .operand_stack
+                    .pop_check_type(constants::PrimitiveType::SHORT)
+                    .unwrap();
                 let res = value1.value + value2.value;
                 execution_context
                     .operand_stack
