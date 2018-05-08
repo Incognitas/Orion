@@ -1,27 +1,29 @@
 use bytecodes::bytecode;
 use context::Context;
 use stack::StackEntry;
-use jcvmerrors::InterpreterError;
 use constants;
-use exceptions;
+use exceptions::{throw_exception, throw_exception_from_interpretererror, InterpreterException};
 use traits::{BufferAccessor, HasType};
 
 // macro allowing to simplify null reference check
 #[macro_export]
 macro_rules! check_null_reference {
-    ($variable:ident, $ctx:ident) => (
+    ($variable: ident, $ctx: ident) => {
         if !$variable.is_of_type(constants::PrimitiveType::REFERENCE)
-            || $variable.value == constants::NULL_HANDLE {
-                exceptions::throw_exception($ctx,
-                     exceptions::InterpreterException::NullPointerException);
+            || $variable.value == constants::NULL_HANDLE
+        {
+            return throw_exception($ctx, InterpreterException::NullPointerException);
         }
-    )
+    };
 }
 
 ///
 /// Manages aaload, baload, saload, iaload
 ///
-pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) {
+pub fn xaload(
+    execution_context: &mut Context,
+    type_: constants::PrimitiveType,
+) -> Result<(), InterpreterException> {
     let arrayref = execution_context
         .operand_stack
         .pop_check_type(constants::PrimitiveType::REFERENCE)
@@ -57,7 +59,7 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
                             .push(StackEntry::from_values(res, type_));
                     }
                     Err(e) => {
-                        exceptions::throw_exception_from_interpretererror(execution_context, e);
+                        return throw_exception_from_interpretererror(execution_context, e);
                     }
                 }
             }
@@ -69,9 +71,7 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
                     Ok(res) => {
                         execution_context.operand_stack.bpush(res);
                     }
-                    Err(e) => {
-                        exceptions::throw_exception_from_interpretererror(execution_context, e)
-                    }
+                    Err(e) => return throw_exception_from_interpretererror(execution_context, e),
                 }
             }
 
@@ -83,9 +83,7 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
                     Ok(res) => {
                         execution_context.operand_stack.ipush(res);
                     }
-                    Err(e) => {
-                        exceptions::throw_exception_from_interpretererror(execution_context, e)
-                    }
+                    Err(e) => return throw_exception_from_interpretererror(execution_context, e),
                 }
             }
 
@@ -94,12 +92,14 @@ pub fn xaload(execution_context: &mut Context, type_: constants::PrimitiveType) 
             }
         }
     } else {
-        exceptions::throw_exception(execution_context, associated_reference.err().unwrap());
+        return throw_exception(execution_context, associated_reference.err().unwrap());
     }
+
+    Ok(())
 }
 
 ///
-/// Manages astore, sstore, istore
+/// Manages astore, sstore, istore and assoiated xstore_x (because index is passed as parameter)
 ///
 pub fn xstore(execution_context: &mut Context, index: u8, type_: constants::PrimitiveType) {
     match type_ {
@@ -144,4 +144,49 @@ pub fn xstore(execution_context: &mut Context, index: u8, type_: constants::Prim
 
         _ => panic!("Unknown type"),
     };
+}
+
+///
+/// Manages astore, sstore, istore and assoiated xstore_x (because index is passed as parameter)
+/// Note: for aaload, some supplementary checks are performed to ensure consistency of the operaton
+/// See chapter 7.5.2 from JCVM specification for more details
+///
+pub fn xastore(
+    execution_context: &mut Context,
+    type_: constants::PrimitiveType,
+) -> Result<(), InterpreterException> {
+    // in stack:
+    // array ref
+    // index
+    // value
+    // first, pop the array reference and check it is not null
+    let array_ref = execution_context
+        .operand_stack
+        .pop_check_type(constants::PrimitiveType::REFERENCE)
+        .unwrap();
+
+    check_null_reference!(array_ref, execution_context);
+
+    // make sure it is an array of the correct type
+    let array = execution_context
+        .object_manager
+        .get_object(array_ref.value as usize)
+        .unwrap();
+
+    // check that is is really an array
+    if !array.is_array() || !array.is_of_type(type_) {
+        return Err(InterpreterException::SecurityException);
+    }
+
+    let index = execution_context
+        .operand_stack
+        .pop_check_type(constants::PrimitiveType::SHORT)
+        .unwrap();
+
+    /*let value = execution_context
+        .operand_stack
+        .pop_check_type(type_)
+        .unwrap_or(return Err(InterpreterException::SecurityException));*/
+
+    Ok(())
 }

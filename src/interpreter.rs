@@ -3,9 +3,7 @@ use context::Context;
 use stack::StackEntry;
 use jcvmerrors::InterpreterError;
 use constants;
-use exceptions;
-use traits::{BufferAccessor, HasType};
-use interpreterutils::{xaload, xstore};
+use interpreterutils::{xaload, xastore, xstore};
 
 pub type BytecodeType = i8;
 // pub type BytecodeData = Vec<BytecodeType>;
@@ -209,10 +207,18 @@ pub fn interpreter(execution_context: &mut Context) -> Result<(), InterpreterErr
                     constants::PrimitiveType::INTEGER,
                 );
             }
-            //bytecode::aastore,         // 55
-            //bytecode::bastore,         // 56
-            //bytecode::sastore,         // 57
-            //bytecode::iastore,         // 58
+            bytecode::aastore => {
+                xastore(execution_context, constants::PrimitiveType::REFERENCE);
+            }
+            bytecode::bastore => {
+                xastore(execution_context, constants::PrimitiveType::BYTE);
+            }
+            bytecode::sastore => {
+                xastore(execution_context, constants::PrimitiveType::SHORT);
+            }
+            bytecode::iastore => {
+                xastore(execution_context, constants::PrimitiveType::INTEGER);
+            }
             //bytecode::pop,             // 59
             //bytecode::pop2,            // 60
             //bytecode::dup,             // 61
